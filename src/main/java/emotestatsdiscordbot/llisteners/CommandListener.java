@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +20,7 @@ import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.restaction.pagination.MessagePaginationAction;
 
 public class CommandListener extends ListenerAdapter {
 
@@ -58,9 +61,8 @@ public class CommandListener extends ListenerAdapter {
 	    		out[i] += a;
 	    	}
 	    }
-	    System.out.println(out);
 	    e.getHook().editOriginal("done!").queue();
-	    for (String s : out) if (!s.isEmpty() && !s.isBlank()) e.getChannel().sendMessage(s).queue();
+	    for (String s : out) if (s != null && !s.isEmpty() && !s.isBlank()) e.getChannel().sendMessage(s).queue();
 	    System.out.println("DONE!");
 	}
 	
@@ -70,75 +72,36 @@ public class CommandListener extends ListenerAdapter {
 		List<CompletableFuture<Void>> promises = new ArrayList<>();
 		for (TextChannel t : channels) {
 			promises.add(CompletableFuture.runAsync(() -> {
+				Thread.currentThread().setName(t.getName());
 				String firstId = MessageHistory.getHistoryFromBeginning(t).limit(1).complete().getRetrievedHistory().get(0).getId();
 				System.out.println("Retived first id for "+t.getName());
-				try {
-					allMsgs.put(t, t.getIterableHistory().takeUntilAsync(m -> {return m.getId().equals(firstId);}).get());
-					System.out.println("Got all msgs for "+t.getName());
-				} catch (InterruptedException | ExecutionException e) {
-					e.printStackTrace();
+				MessagePaginationAction iterableHist = t.getIterableHistory();
+				List<Message> msgs = new ArrayList<Message>();
+				boolean done = false;
+				while (!done) {
+					try {
+						msgs.addAll(iterableHist.takeUntilAsync(m -> m.getId().equals(firstId)).join());
+						done = true;
+						System.out.println("Got all msgs for "+t.getName());
+					} catch (CancellationException | CompletionException e) {
+						System.err.println("CAUGHT EXCEPTION IN THREAD "+Thread.currentThread().getName());
+						System.err.println(e.getMessage());
+						e.printStackTrace();
+					}
 				}
+				allMsgs.put(t, null);
 			}, ex));			
 		}
 		try {
-	        CompletableFuture.allOf(promises.toArray(new CompletableFuture[0])).get();
-	    } catch (InterruptedException | ExecutionException eex) {
+	        CompletableFuture<Void> all = CompletableFuture.allOf(promises.toArray(new CompletableFuture[0]));
+	        all.join();
+	    } catch (CancellationException | CompletionException eex) {
+	    	System.err.println("CAUGHT EXCPETION IN MAIN");
+	    	System.err.println(eex.getMessage());
 	        eex.printStackTrace();
-	    }
-	    ex.shutdown();
-		return allMsgs;
-	}	
-	
-	private void statsCmd2(SlashCommandInteractionEvent e) {
-		List<TextChannel> channels = e.getGuild().getTextChannels();
-		ConcurrentHashMap<String, Integer> emotes = new ConcurrentHashMap<String, Integer>();
-		e.deferReply().queue();
-		ExecutorService ex = Executors.newFixedThreadPool(channels.size());
-		List<CompletableFuture<Void>> promise = new ArrayList<>();
-		for (TextChannel tc : channels) {
-			CompletableFuture<Void> p = CompletableFuture.runAsync(() -> {
-				MessageHistory mh =  tc.getHistory();
-				int c = 0;
-				while (true) {
-					List<Message> msgs = mh.retrievePast(100).complete();
-					System.out.println(tc.getName() + "=>" + c);
-					if (msgs.isEmpty()) break;
-					c += msgs.size();
-					for (Message msg : msgs) {
-						Matcher matcher = Pattern.compile("<:([^:]+):[0-9]+>").matcher(msg.getContentRaw());
-				        while (matcher.find()) {
-				        	emotes.put(matcher.group(0), emotes.get(matcher.group(0))==null?1:emotes.get(matcher.group(0))+1);
-				        }
-					}
-					//if (c > 10000) break;
-					if (msgs.size() < 100) break;
-				}
-				System.out.println(tc.getName() + " Done!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			}, ex);
-			promise.add(p);
+	    } finally {
+	    	ex.shutdown();	
 		}
-		CompletableFuture<Void> allOf = CompletableFuture.allOf(promise.toArray(new CompletableFuture[0]));
-	    try {
-	        allOf.get();
-	    } catch (InterruptedException | ExecutionException eex) {
-	        eex.printStackTrace();
-	    }
-	    ex.shutdown();
-	    
-	    String out[] = new String[100];
-	    out[0] = "Ok here are the stats (that are unordered bc i dont want to sort them <:shy:934137983228067930>)\n";
-	    int i = 1;
-	    for (Map.Entry<String, Integer> es : emotes.entrySet()) {
-	    	if (es.getValue() > 4) {
-	    		String a = es.getKey() + " => " + es.getValue() + "\n";
-	    		if (out[i] == null) out[i] = "";
-	    		if (out[i].length() + a.length() > 2000) i++;
-	    		out[i] += a;
-	    	}
-	    }
-	    System.out.println(out);
-	    e.getHook().editOriginal("done!").queue();
-	    for (String s : out) if (!s.isEmpty() && !s.isBlank()) e.getChannel().sendMessage(s).queue();
-	    System.out.println("DONE!");
-	}
+	    return allMsgs;
+	}	
 }
