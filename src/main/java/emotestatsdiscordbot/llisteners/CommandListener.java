@@ -59,10 +59,10 @@ public class CommandListener extends ListenerAdapter {
 					if (!reacts.isEmpty()) {
 						reacts.forEach(r -> {
 							Emoji re = r.getEmoji();
-							if (re.getType().equals(Emoji.Type.CUSTOM)) { emotes.put(re.getFormatted(), emotes.get(re.getFormatted()) == null ? 1 : emotes.get(re.getFormatted()) + 1); }
+							if (re.getType().equals(Emoji.Type.CUSTOM)) { emotes.put(re.getFormatted(), emotes.get(re.getFormatted()) == null ? r.getCount() : emotes.get(re.getFormatted()) + r.getCount()); }
 						});
 					}
-					List<CustomEmoji> me = m.getMentions().getCustomEmojis();
+					Bag<CustomEmoji> me = m.getMentions().getCustomEmojisBag();
 					if (!me.isEmpty()) { me.forEach(emote -> { emotes.put(emote.getFormatted(), emotes.get(emote.getFormatted()) == null ? 1 : emotes.get(emote.getFormatted()) + 1); }); }
 				}
 			}
@@ -90,8 +90,6 @@ public class CommandListener extends ListenerAdapter {
 			ConcurrentMap<TextChannel, List<Message>> allMsgs = new ConcurrentHashMap<TextChannel, List<Message>>();
 			List<CompletableFuture<List<Message>>> promises = new ArrayList<>();
 			for (TextChannel t : channels) {
-				if (!t.getName().equals("latibot"))
-					continue;
 				String firstId = MessageHistory.getHistoryFromBeginning(t).limit(1).complete().getRetrievedHistory().get(0).getId();
 				System.out.println("Retived first id for " + t.getName());
 				promises.add(t.getIterableHistory().takeUntilAsync(0, m -> m.getId().equals(firstId)).whenCompleteAsync((msgs, err) -> {
