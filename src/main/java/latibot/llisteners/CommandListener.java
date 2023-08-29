@@ -1,4 +1,4 @@
-package emotestatsdiscordbot.llisteners;
+package latibot.llisteners;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.collections4.Bag;
 
-import emotestatsdiscordbot.LatiBot;
+import latibot.LatiBot;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.MessageReaction;
