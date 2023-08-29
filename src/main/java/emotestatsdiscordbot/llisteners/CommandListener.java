@@ -1,8 +1,5 @@
 package emotestatsdiscordbot.llisteners;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.collections4.Bag;
 
+import emotestatsdiscordbot.LatiBot;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -34,11 +32,8 @@ public class CommandListener extends ListenerAdapter {
 		case "ping":
 			pingCmd(e);
 			break;
-		case "stats":
+		case "emotestats":
 			statsCmd(e);
-			break;
-		case "sort":
-			sortCmd(e);
 			break;
 		}
 	}
@@ -49,122 +44,121 @@ public class CommandListener extends ListenerAdapter {
 	}
 
 	private void statsCmd(SlashCommandInteractionEvent e) {
+		LatiBot.LOG.info("User "+e.getUser().getEffectiveName() + " used the 'emotestats' command");
+		int cutoff = e.getOption("cutoff").getAsInt();
 		e.reply("ok this might take a while").queue();
-		Map<String, Integer> emotes = new HashMap<String, Integer>();
+		Map<String, EmoteStat> emotes = new HashMap<String, EmoteStat>();
 		getMsgs(e.getGuild().getTextChannels(), e.getJDA().getRateLimitPool()).thenAcceptAsync(allMsgs -> {
 			for (Map.Entry<TextChannel, List<Message>> c : allMsgs.entrySet()) {
-				System.out.println("Channel " + c.getKey().getName() + " has " + c.getValue().size() + " messages");
+				LatiBot.LOG.info("Channel " + c.getKey().getName() + " has " + c.getValue().size() + " messages");
 				for (Message m : c.getValue()) {
-					List<MessageReaction> reacts = m.getReactions();
-					if (!reacts.isEmpty()) {
-						reacts.forEach(r -> {
-							Emoji re = r.getEmoji();
-							if (re.getType().equals(Emoji.Type.CUSTOM)) { emotes.put(re.getFormatted(), emotes.get(re.getFormatted()) == null ? r.getCount() : emotes.get(re.getFormatted()) + r.getCount()); }
+					List<MessageReaction> msgReactions = m.getReactions();
+					if (!msgReactions.isEmpty()) {
+						msgReactions.forEach(r -> {
+							if (r.getEmoji().getType().equals(Emoji.Type.CUSTOM)) { 
+								CustomEmoji ce = (CustomEmoji)r.getEmoji();
+								if (emotes.containsKey(ce.getId())) {
+									emotes.get(ce.getId()).incCount(r.getCount());
+								} else {
+									emotes.put(ce.getId(), new EmoteStat(ce, r.getCount()));
+								}
+							}
 						});
 					}
-					Bag<CustomEmoji> me = m.getMentions().getCustomEmojisBag();
-					if (!me.isEmpty()) { me.forEach(emote -> { emotes.put(emote.getFormatted(), emotes.get(emote.getFormatted()) == null ? 1 : emotes.get(emote.getFormatted()) + 1); }); }
+					Bag<CustomEmoji> msgEmotes = m.getMentions().getCustomEmojisBag();
+					if (!msgEmotes.isEmpty()) { 
+						msgEmotes.forEach(emote -> {
+							if (emotes.containsKey(emote.getId())) {
+								emotes.get(emote.getId()).incCount();
+							} else {
+								emotes.put(emote.getId(), new EmoteStat(emote));
+							}
+						});
+					}
 				}
 			}
-			String out[] = new String[100];
-			out[0] = "Ok here are the stats (that are unordered bc i dont want to sort them)\n";
-			int i = 1;
-			for (Map.Entry<String, Integer> es : emotes.entrySet()) {
-				System.out.println(es.getKey() + " => " + es.getValue());
-				// if (es.getValue() > 4) {
-				String a = es.getKey() + " => " + es.getValue() + "\n";
-				if (out[i] == null) out[i] = "";
-				if (out[i].length() + a.length() > 2000) i++;
-				out[i] = out[i] == null ? a : out[i] + a;
-				// }
+			List<EmoteStat> emotestats = new ArrayList<EmoteStat>(emotes.values());
+			Collections.sort(emotestats);
+			List<String> out = new ArrayList<String>();
+			out.add("Here are the emote stats:\n");
+			for (int i = 0, j = 0; i < emotestats.size(); i++) {
+				EmoteStat cur = emotestats.get(i);
+				if (cur.getCount() >= cutoff) {
+					String add = cur.getEmote().getAsMention() + " " +cur.getCount()+", ";
+					if (out.get(j) == null) out.add("");
+					if (out.get(j).length()+add.length() > 2000) j++;
+					out.set(j, out.get(j)+add);
+				}
 			}
-			for (String s : out)
-				if (s != null && !s.isEmpty() && !s.isBlank())
-					e.getChannel().sendMessage(s).queue();
-			System.out.println("DONE!");
+			out.forEach(s -> e.getChannel().sendMessage(s).queue());
+			LatiBot.LOG.info("emotestats command finished");
 		});
 	}
 
-	private CompletableFuture<ConcurrentMap<TextChannel, List<Message>>> getMsgs(List<TextChannel> channels, ScheduledExecutorService ex) {
+	private CompletableFuture<ConcurrentMap<TextChannel, List<Message>>> getMsgs(final List<TextChannel> channels, ScheduledExecutorService ex) {
 		return CompletableFuture.supplyAsync(() -> {
 			ConcurrentMap<TextChannel, List<Message>> allMsgs = new ConcurrentHashMap<TextChannel, List<Message>>();
 			List<CompletableFuture<List<Message>>> promises = new ArrayList<>();
 			for (TextChannel t : channels) {
 				String firstId = MessageHistory.getHistoryFromBeginning(t).limit(1).complete().getRetrievedHistory().get(0).getId();
-				System.out.println("Retived first id for " + t.getName());
+				LatiBot.LOG.info("Retived first id for " + t.getName());
 				promises.add(t.getIterableHistory().takeUntilAsync(0, m -> m.getId().equals(firstId)).whenCompleteAsync((msgs, err) -> {
 					if (err != null) {
-						System.err.println("Error getting messages in channel " + t.getName());
-						err.printStackTrace();
+						LatiBot.LOG.error("Error getting messages in channel " + t.getName()+":", err);
 					} else {
 						if (msgs != null) {
-							System.out.println(t.getName() + " done!");
 							allMsgs.put(t, msgs);
+							LatiBot.LOG.info(t.getName() + " done!");
 						} else {
-							System.err.println("this shouldnt happen!!");
+							LatiBot.LOG.error("Unknown error in getting messages in channel "+t.getName());
 						}
 					}
 				}, ex));
 			}
 			try {
 				return CompletableFuture.allOf(promises.toArray(new CompletableFuture[0])).thenApplyAsync(v -> allMsgs, ex).exceptionally(e -> {
-					System.err.println("Error in all promise!");
-					e.printStackTrace();
+					LatiBot.LOG.error("Error in all promise:", e);
 					return allMsgs;
 				}).join();
 			} catch (CompletionException | CancellationException e) {
-				System.err.println("Error on join!");
-				e.printStackTrace();
+				LatiBot.LOG.error("Error in join promise:", e);
 				return allMsgs;
 			}
 		});
 	}
 
-	private void sortCmd(SlashCommandInteractionEvent e) {
-		BufferedReader msgs = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("message.txt")));
-		ArrayList<EmoteStat> emotes = new ArrayList<EmoteStat>();
-		String line;
-		try {
-			while ((line = msgs.readLine()) != null) {
-				String[] vk = line.split(" => ");
-				emotes.add(new EmoteStat(Integer.parseInt(vk[1]), vk[0]));
-			}
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		e.reply("ok").queue();
-		Collections.sort(emotes);
-		String out[] = new String[100];
-		out[0] = "Ok here are the stats (that are ordered now!!!!)\n";
-		int i = 1;
-		for (EmoteStat es : emotes) {
-			System.out.println(es.emote + " => " + es.count);
-			if (es.count > 4) {
-				String a = es.emote + " => " + es.count + "\n";
-				if (out[i] == null)
-					out[i] = "";
-				if (out[i].length() + a.length() > 2000)
-					i++;
-				out[i] = out[i] == null ? a : out[i] + a;
-			}
-		}
-		for (String s : out)
-			if (s != null && !s.isEmpty() && !s.isBlank())
-				e.getChannel().sendMessage(s).queue();
-	}
-
 	private static class EmoteStat implements Comparable<EmoteStat> {
-		public int count;
-		public String emote;
+		private int count;
+		private final CustomEmoji emote;
 
-		@Override
-		public int compareTo(EmoteStat o) {
-			return o.count - count;
+		public EmoteStat(final CustomEmoji e) {
+			this(e,1);
 		}
-
-		public EmoteStat(int c, String e) {
+		
+		public EmoteStat(final CustomEmoji e, final int c) {
 			count = c;
 			emote = e;
+		}
+		
+		public CustomEmoji getEmote() {
+			return emote;
+		}
+		
+		public int getCount() {
+			return count;
+		}
+		
+		public void incCount() {
+			incCount(1);
+		}
+		
+		public void incCount(final int c) {
+			count += c;
+		}
+		
+		@Override
+		public int compareTo(final EmoteStat o) {
+			return o.getCount() - this.getCount();
 		}
 	}
 }
