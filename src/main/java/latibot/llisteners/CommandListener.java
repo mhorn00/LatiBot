@@ -15,6 +15,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.commons.collections4.Bag;
 
 import latibot.LatiBot;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -34,6 +35,9 @@ public class CommandListener extends ListenerAdapter {
 			break;
 		case "emotestats":
 			statsCmd(e);
+			break;
+		case "nickname":
+			nicknameCmd(e);
 			break;
 		}
 	}
@@ -127,6 +131,18 @@ public class CommandListener extends ListenerAdapter {
 		});
 	}
 
+	private void nicknameCmd(SlashCommandInteractionEvent e) {
+		Member user = e.getOption("user").getAsMember();
+		String nickname = e.getOption("nickname").getAsString();
+		if (!user.isOwner()) {
+			user.modifyNickname(nickname).queue();
+			e.reply("Set nickname of "+user.getUser().getName()+" to "+nickname).setEphemeral(true).queue();
+		} else {
+			e.getGuild().getSystemChannel().sendMessage(e.getGuild().getOwner().getAsMention() + " update nickname to '"+nickname+"'").queue();
+			e.reply("\"Set\" nickname of "+user.getUser().getName()+" to " + nickname).setEphemeral(true).queue();
+		}
+	}
+	
 	private static class EmoteStat implements Comparable<EmoteStat> {
 		private int count;
 		private final CustomEmoji emote;

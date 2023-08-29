@@ -23,14 +23,17 @@ public class LatiBot {
 	
     public static void main(String[] args) throws IOException {
         jdaInst = JDABuilder.createDefault(new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
-        		.setActivity(Activity.listening("your walls"))
+        		.setActivity(Activity.watching("the fog coming"))
         		.enableIntents(GatewayIntent.MESSAGE_CONTENT)
         		.addEventListeners(new CommandListener()).build();
         jdaInst.updateCommands().addCommands(
         		Commands.slash("ping", "Pong!"), 
         		Commands.slash("emotestats", "Calculates emote usage statisitcs for the server. Will take a long time most likely.")
         			.setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-        			.addOptions(new OptionData(OptionType.INTEGER, "cutoff", "Cutoff for how many times an emote needs to be counted to be displayed in the outut.", true).setRequiredRange(0, Integer.MAX_VALUE))
+        			.addOptions(new OptionData(OptionType.INTEGER, "cutoff", "Cutoff for how many times an emote needs to be counted to be displayed in the outut.", true).setRequiredRange(0, Integer.MAX_VALUE)),
+        		Commands.slash("nickname", "Change a user's nickname.")
+        			.setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.NICKNAME_MANAGE))
+        			.addOptions(new OptionData(OptionType.USER, "user", "The user to change.", true), new OptionData(OptionType.STRING, "nickname", "The new nickname to set.", true).setRequiredLength(1, 32))
         		).queue();
     }
 }
