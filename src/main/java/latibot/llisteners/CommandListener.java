@@ -39,7 +39,36 @@ public class CommandListener extends ListenerAdapter {
 		case "nickname":
 			nicknameCmd(e);
 			break;
+		case "shutdown":
+			shutdownCmd(e);
+			break;
+		case "say":
+			sayCmd(e);
+			break;
 		}
+	}
+
+	private void sayCmd(SlashCommandInteractionEvent e) {
+		String msg = e.getOption("message").getAsString();
+		String replyId = e.getOption("reply") != null ? e.getOption("reply").getAsString() : null;
+		LatiBot.LOG.info("User "+e.getUser().getEffectiveName() + " used the 'say' command with args '"+msg+"'"+(replyId!=null ? " '"+replyId+"'" : ""));
+		if (replyId == null) {
+			e.reply("ok").setEphemeral(true).queue();
+			e.getChannel().sendMessage(msg).queue();
+		} else {
+			Message replyMsg = e.getChannel().retrieveMessageById(replyId).complete();
+			if (replyMsg != null) {
+				e.reply("ok").setEphemeral(true).queue();
+				replyMsg.reply(msg).queue();
+			} else {
+				e.reply("Couldn't find message with ID '"+replyId+"' in channel "+e.getChannel().getName()+"!").setEphemeral(true).queue();
+			}
+		}
+	}
+
+	private void shutdownCmd(SlashCommandInteractionEvent e) {
+		e.reply("ok bye bye!").queue();
+		e.getJDA().shutdown();
 	}
 
 	private void pingCmd(SlashCommandInteractionEvent e) {
@@ -134,11 +163,12 @@ public class CommandListener extends ListenerAdapter {
 	private void nicknameCmd(SlashCommandInteractionEvent e) {
 		Member user = e.getOption("user").getAsMember();
 		String nickname = e.getOption("nickname").getAsString();
+		LatiBot.LOG.info("User "+e.getUser().getEffectiveName() + " used the 'nickname' command with args "+user.getUser().getName()+" "+nickname);
 		if (!user.isOwner()) {
 			user.modifyNickname(nickname).queue();
 			e.reply("Set nickname of "+user.getUser().getName()+" to "+nickname).setEphemeral(true).queue();
 		} else {
-			e.getGuild().getSystemChannel().sendMessage(e.getGuild().getOwner().getAsMention() + " update nickname to '"+nickname+"'").queue();
+			e.getGuild().getSystemChannel().sendMessage(e.getUser().getAsMention() + " updated your nickname to '"+nickname+"' "+e.getGuild().getOwner().getAsMention()).queue();
 			e.reply("\"Set\" nickname of "+user.getUser().getName()+" to " + nickname).setEphemeral(true).queue();
 		}
 	}
