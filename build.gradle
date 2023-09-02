@@ -6,13 +6,15 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+		url 'https://jitpack.io'
+	}
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.13") {
-        exclude module: 'opus-java'
-    }
+    implementation("net.dv8tion:JDA:5.0.0-beta.13")
 	implementation("ch.qos.logback:logback-classic:1.2.8")
+	implementation('com.github.walkyst:lavaplayer-fork:1.4.3')
 }
 
 java {
