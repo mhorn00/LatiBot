@@ -22,6 +22,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import latibot.LatiBot;
 import latibot.audio.AudioSendingHandler;
+import latibot.audio.AudioTrackInfo;
 import latibot.audio.TrackManager;
 import latibot.audio.TrackManager.SongQueue;
 import net.dv8tion.jda.api.entities.Member;
@@ -319,10 +320,20 @@ public class CommandListener extends ListenerAdapter {
 			e.reply("the queue is empty!").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
 			SongQueue queue = tm.getQueue();
-			String out = "```\nCurrent song:\n"+queue.getCurrent().getAudioTrack().getInfo().title+" - Queued by "+queue.getCurrent().getMember().getEffectiveName()+"\nQueue:\n";
-			out += queue.enumerateQueue();
-			out += "```";
-			e.reply(out).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
+			String[] out = new String[100];
+			out[0] = "Current song:\n"+queue.getCurrent().getAudioTrack().getInfo().title+" - Queued by "+queue.getCurrent().getMember().getEffectiveName()+"\n";
+			out[1] = "Queue:\n";
+			for (int i = 0, j = 1; i < queue.size() && j < 100; i++) {
+				AudioTrackInfo cur = queue.get(i);
+				String add = (i+1) + ". " + cur.getAudioTrack().getInfo().title + " - Queued by "+cur.getMember().getEffectiveName()+"\n";
+				if (out[j].length()+add.length() > 2000) j++;
+				if (out[j] == null) out[j] = "";
+				out[j] = out[j]+add;
+			}
+			e.reply(out[0]).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
+			for (int i=1;i<out.length;i++) {
+				if (out[i]!=null && !out[i].isEmpty() && !out[i].isBlank()) e.getChannel().sendMessage(out[i]).queue(hook -> hook.delete().queueAfter(60, TimeUnit.SECONDS));
+			}
 		}
 	}
 
@@ -391,6 +402,7 @@ public class CommandListener extends ListenerAdapter {
 		e.reply("ok this might take a while").queue();
 		Map<String, EmoteStat> emotes = new HashMap<String, EmoteStat>();
 		getMsgs(e.getGuild().getTextChannels(), e.getJDA().getRateLimitPool()).thenAcceptAsync(allMsgs -> {
+			e.getChannel().sendTyping().queue();
 			for (Map.Entry<TextChannel, List<Message>> c : allMsgs.entrySet()) {
 				LatiBot.LOG.info("Channel " + c.getKey().getName() + " has " + c.getValue().size() + " messages");
 				for (Message m : c.getValue()) {
@@ -420,20 +432,23 @@ public class CommandListener extends ListenerAdapter {
 				}
 				LatiBot.LOG.info("Channel " + c.getKey().getName() + " done counting!");
 			}
+			//TODO: this is getting stuck somewhere after this point smh
 			List<EmoteStat> emotestats = new ArrayList<EmoteStat>(emotes.values());
 			Collections.sort(emotestats);
-			List<String> out = new ArrayList<String>();
-			out.add("Here are the emote stats:\n");
-			for (int i = 0, j = 0; i < emotestats.size(); i++) {
+			String[] out = new String[100];
+			out[0] = "Here are the emote stats:\n";
+			for (int i = 0, j = 0; i < emotestats.size() && j < 100; i++) {
 				EmoteStat cur = emotestats.get(i);
 				if (cur.getCount() >= cutoff) {
 					String add = cur.getEmote().getAsMention() + " " +cur.getCount()+", ";
-					if (out.get(j) == null) out.add("");
-					if (out.get(j).length()+add.length() > 2000) j++;
-					out.set(j, out.get(j)+add);
+					if (out[j].length()+add.length() > 2000) j++;
+					if (out[j] == null) out[j] = "";
+					out[j] = out[j]+add;
 				}
 			}
-			out.forEach(s -> e.getChannel().sendMessage(s).queue());
+			for (String s : out) {
+				e.getChannel().sendMessage(s).queue();
+			}
 			LatiBot.LOG.info("emotestats command finished");
 		});
 	}

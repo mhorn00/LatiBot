@@ -144,13 +144,13 @@ public class TrackManager extends AudioEventAdapter {
 		public void shuffleQueue() {
 			Collections.shuffle(queue);
 		}
+
+		public AudioTrackInfo get(int i) {
+			return queue.get(i);
+		}
 		
-		public String enumerateQueue() {
-			String out = "";
-			for (int i=0;i<queue.size();i++) {
-				out += (i+1) + " - "+queue.get(i).getAudioTrack().getInfo().title + " - Queued by "+queue.get(i).getMember().getEffectiveName()+(i==queue.size()-1?"":"\n");
-			}
-			return out;
+		public int size() {
+			return queue.size();
 		}
 	}
 }
