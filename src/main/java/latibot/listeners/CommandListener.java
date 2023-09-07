@@ -101,61 +101,61 @@ public class CommandListener extends ListenerAdapter {
 
 	private void clearCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().isQueueEmpty()) {
-			e.reply("the queue is already empty!").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("the queue is already empty!").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
-			e.reply("queue cleared!").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("queue cleared!").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			tm.clearQueue();
 		}
 	}
 
 	private void repeatCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().getCurrent() == null) {
-			e.reply("there's no song currently playing").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("there's no song currently playing").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
 			if (tm.toggleRepeat()) {
-				e.reply("ok repeating track "+tm.getQueue().getCurrent().getAudioTrack().getInfo().title).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok repeating track "+tm.getQueue().getCurrent().getAudioTrack().getInfo().title).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			} else {
-				e.reply("ok turned off repeat").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok turned off repeat").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 		}
 	}
 
 	private void shuffleCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().isQueueEmpty()) {
-			e.reply("the queue is currently empty").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("the queue is currently empty").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
-			e.reply("ok queue shuffled").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("ok queue shuffled").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			tm.shuffleQueue();
 		}
 	}
 
 	private void pauseCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().getCurrent() == null) {
-			e.reply("there isn't anything playing").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("there isn't anything playing").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
 			if (tm.togglePause()) {
-				e.reply("ok paused").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok paused").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			} else {
-				e.reply("ok unpaused").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok unpaused").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 		}
 	}
 
 	private void skipCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().getCurrent() == null) {
-			e.reply("there isn't anything playing").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("there isn't anything playing").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
-			e.reply("skipping...").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("skipping...").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			tm.skip();
 		}
 	}
@@ -166,7 +166,7 @@ public class CommandListener extends ListenerAdapter {
 		if (!am.isConnected() && e.getMember().getVoiceState().inAudioChannel()) {
 			am.openAudioConnection(e.getMember().getVoiceState().getChannel().asVoiceChannel()); //this will fail if its a stage channel lol
 		} else if (!am.isConnected() && !e.getMember().getVoiceState().inAudioChannel()) {
-			e.reply("i'm not currently in a voice channel").setEphemeral(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			return;
 		} 
 		if (tm == null) {
@@ -177,23 +177,23 @@ public class CommandListener extends ListenerAdapter {
 		LatiBot.audioPlayerManager.loadItemOrdered(LatiBot.audioPlayer, link, new AudioLoadResultHandler() {
 			@Override
 			public void trackLoaded(AudioTrack track) {
-				e.reply("ok playing track "+track.getInfo().title).setEphemeral(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok playing track "+track.getInfo().title).setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 				tm.queueNext(track, e.getMember());
 			}
 			@Override
 			public void playlistLoaded(AudioPlaylist playlist) {
-				e.reply("ok queuing playlist next"+playlist.getName()).setEphemeral(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));;
+				e.reply("ok queuing playlist next"+playlist.getName()).setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));;
 				for (AudioTrack track : playlist.getTracks()) {
 					tm.queueNext(track, e.getMember());
 				}
 			}
 			@Override
 			public void noMatches() {
-				e.reply("no track found").setEphemeral(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("no track found").setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 			@Override
 			public void loadFailed(FriendlyException exception) {
-				e.reply("exception occured! check logs").queue();
+				e.reply("exception occured! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
 				LatiBot.LOG.warn("Exception occured while trying to play track "+link+": ", exception);
 			}
 		});
@@ -205,7 +205,7 @@ public class CommandListener extends ListenerAdapter {
 		if (!am.isConnected() && e.getMember().getVoiceState().inAudioChannel()) {
 			am.openAudioConnection(e.getMember().getVoiceState().getChannel().asVoiceChannel()); //this will fail if its a stage channel lol
 		} else if (!am.isConnected() && !e.getMember().getVoiceState().inAudioChannel()) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			return;
 		} 
 		if (tm == null) {
@@ -216,23 +216,23 @@ public class CommandListener extends ListenerAdapter {
 		LatiBot.audioPlayerManager.loadItemOrdered(LatiBot.audioPlayer, link, new AudioLoadResultHandler() {
 			@Override
 			public void trackLoaded(AudioTrack track) {
-				e.reply("ok playing track next "+track.getInfo().title).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok playing track next "+track.getInfo().title).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 				tm.queueNext(track, e.getMember());
 			}
 			@Override
 			public void playlistLoaded(AudioPlaylist playlist) {
-				e.reply("ok queuing playlist next"+playlist.getName()).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));;
+				e.reply("ok queuing playlist next"+playlist.getName()).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));;
 				for (AudioTrack track : playlist.getTracks()) {
 					tm.queueNext(track, e.getMember());
 				}
 			}
 			@Override
 			public void noMatches() {
-				e.reply("no track found").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("no track found").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 			@Override
 			public void loadFailed(FriendlyException exception) {
-				e.reply("exception occured! check logs").queue();
+				e.reply("exception occured! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
 				LatiBot.LOG.warn("Exception occured while trying to play track "+link+": ", exception);
 			}
 		});
@@ -244,7 +244,7 @@ public class CommandListener extends ListenerAdapter {
 		if (!am.isConnected() && e.getMember().getVoiceState().inAudioChannel()) {
 			am.openAudioConnection(e.getMember().getVoiceState().getChannel().asVoiceChannel()); //this will fail if its a stage channel lol
 		} else if (!am.isConnected() && !e.getMember().getVoiceState().inAudioChannel()) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			return;
 		} 
 		if (tm == null) {
@@ -255,20 +255,20 @@ public class CommandListener extends ListenerAdapter {
 		LatiBot.audioPlayerManager.loadItemOrdered(LatiBot.audioPlayer, link, new AudioLoadResultHandler() {
 			@Override
 			public void trackLoaded(AudioTrack track) {
-				e.reply("ok playing track now "+track.getInfo().title).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok playing track now "+track.getInfo().title).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 				tm.queueNow(track, e.getMember());
 			}
 			@Override
 			public void playlistLoaded(AudioPlaylist playlist) {
-				e.reply("don't queue a playlist with this command lol").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("don't queue a playlist with this command lol").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 			@Override
 			public void noMatches() {
-				e.reply("no track found").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("no track found").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 			@Override
 			public void loadFailed(FriendlyException exception) {
-				e.reply("exception occured! check logs").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("exception occured! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
 				LatiBot.LOG.warn("Exception occured while trying to play track "+link+": ", exception);
 			}
 		});
@@ -280,7 +280,7 @@ public class CommandListener extends ListenerAdapter {
 		if (!am.isConnected() && e.getMember().getVoiceState().inAudioChannel()) {
 			am.openAudioConnection(e.getMember().getVoiceState().getChannel().asVoiceChannel()); //this will fail if its a stage channel lol
 		} else if (!am.isConnected() && !e.getMember().getVoiceState().inAudioChannel()) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			return;
 		} 
 		if (tm == null) {
@@ -291,23 +291,23 @@ public class CommandListener extends ListenerAdapter {
 		LatiBot.audioPlayerManager.loadItemOrdered(LatiBot.audioPlayer, link, new AudioLoadResultHandler() {
 			@Override
 			public void trackLoaded(AudioTrack track) {
-				e.reply("ok playing track "+track.getInfo().title).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok playing track "+track.getInfo().title).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 				tm.queue(track, e.getMember());
 			}
 			@Override
 			public void playlistLoaded(AudioPlaylist playlist) {
-				e.reply("ok queuing playlist "+playlist.getName()).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok queuing playlist "+playlist.getName()).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 				for (AudioTrack track : playlist.getTracks()) {
 					tm.queue(track, e.getMember());
 				}
 			}
 			@Override
 			public void noMatches() {
-				e.reply("no track found").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("no track found").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 			@Override
 			public void loadFailed(FriendlyException exception) {
-				e.reply("exception occured! check logs").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("exception occured! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
 				LatiBot.LOG.warn("Exception occured while trying to play track "+link+": ", exception);
 			}
 		});
@@ -315,9 +315,9 @@ public class CommandListener extends ListenerAdapter {
 
 	private void queueCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else if (tm.getQueue().isQueueEmpty()) {
-			e.reply("the queue is empty!").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("the queue is empty!").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
 			SongQueue queue = tm.getQueue();
 			String[] out = new String[100];
@@ -330,9 +330,9 @@ public class CommandListener extends ListenerAdapter {
 				if (out[j] == null) out[j] = "";
 				out[j] = out[j]+add;
 			}
-			e.reply(out[0]).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
+			e.reply(out[0]).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
 			for (int i=1;i<out.length;i++) {
-				if (out[i]!=null && !out[i].isEmpty() && !out[i].isBlank()) e.getChannel().sendMessage(out[i]).queue(hook -> hook.delete().queueAfter(60, TimeUnit.SECONDS));
+				if (out[i]!=null && !out[i].isEmpty() && !out[i].isBlank()) e.getChannel().sendMessage(out[i]).setSuppressedNotifications(true).queue(hook -> hook.delete().queueAfter(60, TimeUnit.SECONDS));
 			}
 		}
 	}
@@ -340,12 +340,12 @@ public class CommandListener extends ListenerAdapter {
 	private void leaveCmd(SlashCommandInteractionEvent e) {
 		AudioManager am = e.getGuild().getAudioManager();
 		if (tm == null || !am.isConnected()) {
-			e.reply("i'm not currently in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		} else {
 			am.closeAudioConnection();
 			LatiBot.audioPlayer.removeListener(tm);
 			tm = null;
-			e.reply("ok bye").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("ok bye").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		}
 	}
 
@@ -355,15 +355,15 @@ public class CommandListener extends ListenerAdapter {
 			AudioManager am = e.getGuild().getAudioManager();
 			if (!am.isConnected()) {
 				am.openAudioConnection(vc);
-				e.reply("ok joining").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok joining").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			} else if (am.getConnectedChannel().getId().equals(vc.getId())) {
-				e.reply("i'm already in your voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("i'm already in your voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			} else {
 				am.openAudioConnection(vc);
-				e.reply("ok moving").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+				e.reply("ok moving").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 			}
 		} else {
-			e.reply("you're not in a voice channel").queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e.reply("you're not in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		}
 	}
 
