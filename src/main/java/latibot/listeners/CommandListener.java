@@ -1,10 +1,14 @@
 package latibot.listeners;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -15,14 +19,17 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.Bag;
 
+import com.sedmelluq.discord.lavaplayer.container.wav.WavAudioTrack;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.tools.io.NonSeekableInputStream;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import latibot.LatiBot;
 import latibot.audio.AudioSendingHandler;
 import latibot.audio.AudioTrackInfo;
+import latibot.audio.DecTalkWrapper;
 import latibot.audio.TrackManager;
 import latibot.audio.TrackManager.SongQueue;
 import net.dv8tion.jda.api.entities.Member;
@@ -40,6 +47,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 public class CommandListener extends ListenerAdapter {
 	
 	private TrackManager tm = null;
+	private DecTalkWrapper dectalk = null;
 	
 	@Override
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent e) {
@@ -96,9 +104,44 @@ public class CommandListener extends ListenerAdapter {
 		case "clear":
 			clearCmd(e);
 			break;
+		case "speak":
+			speakCmd(e);
+			break;
 		}
 	}
 
+	private void speakCmd(SlashCommandInteractionEvent e) {
+		String text = e.getOption("text").getAsString();
+		if (dectalk == null) {
+			dectalk = new DecTalkWrapper();
+			dectalk.ttsStartup();
+		}
+		UUID uuid = UUID.randomUUID();
+		dectalk.ttsSpeak(text, "tts/"+uuid.toString()+".wav");
+		
+		AudioManager am = e.getGuild().getAudioManager();
+		if (!am.isConnected() && e.getMember().getVoiceState().inAudioChannel()) {
+			am.openAudioConnection(e.getMember().getVoiceState().getChannel().asVoiceChannel()); //this will fail if its a stage channel lol
+		} else if (!am.isConnected() && !e.getMember().getVoiceState().inAudioChannel()) {
+			e.reply("i'm not currently in a voice channel").setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			return;
+		} 
+		if (tm == null) {
+			tm = new TrackManager(LatiBot.audioPlayer);
+			LatiBot.audioPlayer.addListener(tm);
+			am.setSendingHandler(new AudioSendingHandler(LatiBot.audioPlayer));
+		}
+		try {
+			tm.queueNow(new WavAudioTrack(
+					new com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo("TTS", "DECtalk", 1, "", false, ""),
+					new NonSeekableInputStream(new FileInputStream(new File("tts/"+uuid.toString()+".wav")))), e.getMember());
+			e.reply("ok playing tts").setEphemeral(true).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+		} catch (FileNotFoundException e1) {
+			e.reply("Failed to play tts").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+			e1.printStackTrace();
+		}
+	}
+	
 	private void clearCmd(SlashCommandInteractionEvent e) {
 		if (tm == null) {
 			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
@@ -387,6 +430,9 @@ public class CommandListener extends ListenerAdapter {
 
 	private void shutdownCmd(SlashCommandInteractionEvent e) {
 		e.reply("ok bye bye!").queue();
+		if (dectalk != null) {
+			dectalk.ttsShutdown();
+		}
 		e.getGuild().getAudioManager().closeAudioConnection();
 		e.getJDA().shutdown();
 	}

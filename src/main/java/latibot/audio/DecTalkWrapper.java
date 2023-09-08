@@ -19,8 +19,7 @@ public class DecTalkWrapper {
 	
 	private native int TextToSpeechStartup();
 	private native int TextToSpeechShutdown();
-	private native int TextToSpeechSync();
-	private native int TextToSeechSpeak(String text);
+	private native int TextToSeechSpeak(String text, String filename);
 	
 	public int ttsStartup() {
 		return TextToSpeechStartup();
@@ -30,12 +29,8 @@ public class DecTalkWrapper {
 		return TextToSpeechShutdown();
 	}
 	
-	public int ttsSync() {
-		return TextToSpeechSync();
-	}
-	
-	public int ttsSpeak(String text) {
-		return TextToSeechSpeak(text);
+	public int ttsSpeak(String text, String filename) {
+		return TextToSeechSpeak(text, filename);
 	}
 	
 }
