@@ -10,6 +10,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
+import latibot.audio.DecTalkWrapper;
 import latibot.listeners.CommandListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -79,5 +80,10 @@ public class LatiBot {
         		).queue();
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
         audioPlayer = audioPlayerManager.createPlayer();
+        
+        //testing dectalk tts
+        DecTalkWrapper test = new DecTalkWrapper();
+        System.out.println("0x"+Integer.toHexString(test.ttsStartup()).toUpperCase());
+        System.out.println("0x"+Integer.toHexString(test.ttsSpeak("i have never been more happy to hear this tts voice in my life. aeiou")).toUpperCase());
     }
 }
