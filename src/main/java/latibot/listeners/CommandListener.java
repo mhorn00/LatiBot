@@ -115,6 +115,7 @@ public class CommandListener extends ListenerAdapter {
 		if (dectalk == null) {
 			dectalk = new DecTalkWrapper();
 			dectalk.ttsStartup();
+			Files.createDirectories(Paths.get("tts"));
 		}
 		UUID uuid = UUID.randomUUID();
 		dectalk.ttsSpeak(text, "tts/"+uuid.toString()+".wav");

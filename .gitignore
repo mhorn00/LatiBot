@@ -63,3 +63,6 @@ local.properties
 
 #lol dont include discord token
 src/main/resources/token.txt
+
+#tts wav directory
+tts
