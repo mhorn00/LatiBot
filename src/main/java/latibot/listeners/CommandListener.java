@@ -3,6 +3,9 @@ package latibot.listeners;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -115,7 +118,11 @@ public class CommandListener extends ListenerAdapter {
 		if (dectalk == null) {
 			dectalk = new DecTalkWrapper();
 			dectalk.ttsStartup();
-			Files.createDirectories(Paths.get("tts"));
+			try {
+				Files.createDirectories(Paths.get("tts"));
+			} catch (IOException err) {
+				LatiBot.LOG.error("Failed to create tts directoy.",err);
+			}
 		}
 		UUID uuid = UUID.randomUUID();
 		dectalk.ttsSpeak(text, "tts/"+uuid.toString()+".wav");
