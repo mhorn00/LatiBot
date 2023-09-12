@@ -78,8 +78,11 @@ public class LatiBot {
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
         		Commands.slash("speak", "Speak using DECtalk.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK))
-        			.addOptions(new OptionData(OptionType.STRING, "text", "Text to speak.", true))
+        			.addOptions(new OptionData(OptionType.STRING, "text", "Text to speak.", true)),
+        		Commands.slash("getemotes", "Downloads all visible emotes.")
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
         		).queue();
+        
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
         audioPlayer = audioPlayerManager.createPlayer();
     }

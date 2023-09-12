@@ -43,6 +43,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -110,9 +111,36 @@ public class CommandListener extends ListenerAdapter {
 		case "speak":
 			speakCmd(e);
 			break;
+		case "getemotes":
+			getEmotesCmd(e);
+			break;
 		}
 	}
 
+	private void getEmotesCmd(SlashCommandInteractionEvent e) {
+		e.reply("ok").queue();
+		List<RichCustomEmoji> emotes = e.getJDA().getEmojis();
+		try {
+		Files.createDirectories(Paths.get("emotes"));
+		emotes.forEach(emoji -> {
+			try {
+				Files.createDirectories(Paths.get("emotes/"+emoji.getGuild().getName()));
+			} catch (IOException e1) {
+				LatiBot.LOG.error("Failed to create guild emote directoy '"+emoji.getGuild().getName()+"'",e1);
+			}
+			emoji.getImage().downloadToFile(new File("emotes/"+emoji.getGuild().getName()+"/"+emoji.getName()+(emoji.isAnimated()?".gif":".png"))).whenComplete((f,err) -> {
+				if (err == null) {
+					LatiBot.LOG.info("Wrote file "+f.getName());
+				} else {
+					LatiBot.LOG.error("Failed to write file " + f.getName(), err);
+				}
+			});
+		});
+		} catch (IOException err) {
+			LatiBot.LOG.error("Failed to create emotes directoy.",err);
+		}
+	}
+	
 	private void speakCmd(SlashCommandInteractionEvent e) {
 		String text = e.getOption("text").getAsString();
 		if (dectalk == null) {
