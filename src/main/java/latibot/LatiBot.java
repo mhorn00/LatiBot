@@ -58,8 +58,9 @@ public class LatiBot {
         		Commands.slash("playsilent", "Silently adds a song to the queue.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK))
         			.addOptions(new OptionData(OptionType.STRING, "link", "The link to add to the queue.", true)),
-        		Commands.slash("join", "Joins the voice channel you are in.")
-        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
+        		Commands.slash("join", "Joins the voice channel you are in or join a specific user.")
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK))
+        			.addOptions(new OptionData(OptionType.USER, "user", "The specific user to join.", true)),
         		Commands.slash("leave", "Leaves the voice channel.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
         		Commands.slash("skip", "Skips to the next song in the queue.")
