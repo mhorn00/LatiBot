@@ -3,6 +3,7 @@ package latibot.listeners;
 import latibot.commands.AudioCommands;
 import latibot.commands.AudioCommands.PlayCommands;
 import latibot.commands.GeneralCommands;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -23,6 +24,9 @@ public class CommandListener extends ListenerAdapter {
 		//User Commands
 		case "nickname":
 			GeneralCommands.nicknameCmd(e);
+			break;
+		case "nicknames":	
+			GeneralCommands.nicknamesCmd(e);
 			break;
 		
 		//Misc Commands
@@ -80,5 +84,10 @@ public class CommandListener extends ListenerAdapter {
 			AudioCommands.speakCmd(e);
 			break;
 		}
+	}
+	
+	@Override
+	public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event) {
+		
 	}
 }

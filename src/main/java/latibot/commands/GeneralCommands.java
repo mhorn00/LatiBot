@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,6 +20,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.commons.collections4.Bag;
 
 import latibot.LatiBot;
+import latibot.listeners.NicknameListener;
+import latibot.listeners.NicknameListener.NicknameHistory;
+import latibot.listeners.NicknameListener.NicknameHistory.NicknameEntry;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageHistory;
@@ -72,6 +76,22 @@ public class GeneralCommands {
 			e.getGuild().getSystemChannel().sendMessage(e.getUser().getAsMention() + " updated your nickname to '"+nickname+"' "+e.getGuild().getOwner().getAsMention()).queue();
 			e.reply("\"Set\" nickname of "+user.getUser().getName()+" to " + nickname).setEphemeral(true).queue();
 		}
+	}
+	
+	public static void nicknamesCmd(SlashCommandInteractionEvent e) {
+		//TODO: This command will reach a 2000 char limit eventually lol. need to fix later
+		Member user = e.getOption("user").getAsMember();
+		LatiBot.LOG.info("User "+e.getUser().getEffectiveName() + " used the 'nicknames' command with args "+user.getUser().getName());
+		String reply = user.getEffectiveName()+" has had the following nicknames:\n";
+		NicknameHistory userHistory = NicknameListener.nicknamesHistory.get(user.getId());
+		if (userHistory == null) {
+			e.reply(user.getEffectiveName() + " does not have any nickname history.").queue();
+			return;
+		}
+		for (NicknameEntry entry : userHistory.getNicknames()) {
+			reply += entry.nickname + " - " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(entry.date)+"\n";
+		}
+		e.reply(reply).queue();
 	}
 	
 	
@@ -137,7 +157,6 @@ public class GeneralCommands {
 				}
 				LatiBot.LOG.info("Channel " + c.getKey().getName() + " done counting!");
 			}
-			//TODO: this is getting stuck somewhere after this point smh
 			List<EmoteStat> emotestats = new ArrayList<EmoteStat>(emotes.values());
 			Collections.sort(emotestats);
 			String[] out = new String[100];
@@ -235,5 +254,4 @@ public class GeneralCommands {
 			return o.getCount() - this.getCount();
 		}
 	}
-	
 }

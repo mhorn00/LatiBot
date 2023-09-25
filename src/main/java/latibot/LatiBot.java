@@ -11,6 +11,8 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
 import latibot.listeners.CommandListener;
+import latibot.listeners.NicknameListener;
+import latibot.listeners.ReadyListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -20,10 +22,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class LatiBot {
 	
-	private static JDA jdaInst;
+	public static JDA jdaInst;
 	public static final Logger LOG = LoggerFactory.getLogger(LatiBot.class);
 	public static final AudioPlayerManager audioPlayerManager = new DefaultAudioPlayerManager();
 	public static AudioPlayer audioPlayer;	 
@@ -31,8 +36,11 @@ public class LatiBot {
     public static void main(String[] args) throws IOException {
         jdaInst = JDABuilder.createDefault(new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
         		.setActivity(Activity.watching("the fog coming"))
-        		.enableIntents(GatewayIntent.MESSAGE_CONTENT)
-        		.addEventListeners(new CommandListener()).build();
+        		.setMemberCachePolicy(MemberCachePolicy.ALL)
+        		.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
+        		.enableCache(CacheFlag.VOICE_STATE)
+        		.setChunkingFilter(ChunkingFilter.ALL)
+        		.addEventListeners(new CommandListener(), new NicknameListener(), new ReadyListener()).build();
         jdaInst.updateCommands().addCommands(
         		Commands.slash("ping", "Pong!"), 
         		Commands.slash("emotestats", "Calculates emote usage statisitcs for the server. Will take a long time most likely.")
@@ -81,7 +89,10 @@ public class LatiBot {
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK))
         			.addOptions(new OptionData(OptionType.STRING, "text", "Text to speak.", true)),
         		Commands.slash("getemotes", "Downloads all visible emotes.")
-        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)),
+        		Commands.slash("nicknames", "Check the nickname history for a user.")
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_SEND))
+        			.addOptions(new OptionData(OptionType.USER, "user", "The user to get the nicknames for.", true))
         		).queue();
         
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
