@@ -231,8 +231,8 @@ public class AudioCommands {
 			}
 			@Override
 			public void loadFailed(FriendlyException exception) {
-				e.reply("exception occured! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
-				LatiBot.LOG.warn("Exception occured while trying to play track "+link+": ", exception);
+				e.reply("exception occurred! check logs").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(60, TimeUnit.SECONDS));
+				LatiBot.LOG.warn("Exception occurred while trying to play track "+link+": ", exception);
 			}
 		});
 	}
@@ -255,7 +255,7 @@ public class AudioCommands {
 			try {
 				Files.createDirectories(Paths.get("tts"));
 			} catch (IOException err) {
-				LatiBot.LOG.error("Failed to create tts directoy.",err);
+				LatiBot.LOG.error("Failed to create tts directory.",err);
 			}
 		}
 		UUID uuid = UUID.randomUUID();

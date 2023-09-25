@@ -43,15 +43,15 @@ public class LatiBot {
         		.addEventListeners(new CommandListener(), new NicknameListener(), new ReadyListener()).build();
         jdaInst.updateCommands().addCommands(
         		Commands.slash("ping", "Pong!"), 
-        		Commands.slash("emotestats", "Calculates emote usage statisitcs for the server. Will take a long time most likely.")
+        		Commands.slash("emotestats", "Calculates emote usage statistics for the server. Will take a long time most likely.")
         			.setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-        			.addOptions(new OptionData(OptionType.INTEGER, "cutoff", "Cutoff for how many times an emote needs to be counted to be displayed in the outut.", true).setRequiredRange(0, Integer.MAX_VALUE)),
+        			.addOptions(new OptionData(OptionType.INTEGER, "cutoff", "Cutoff for how many times an emote needs to be counted to be displayed in the output.", true).setRequiredRange(0, Integer.MAX_VALUE)),
         		Commands.slash("nickname", "Change a user's nickname.")
         			.setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.NICKNAME_MANAGE))
         			.addOptions(new OptionData(OptionType.USER, "user", "The user to change.", true), new OptionData(OptionType.STRING, "nickname", "The new nickname to set.", true).setRequiredLength(1, 32)),
         		Commands.slash("shutdown", "Shutdown the bot.")
         			.setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)),
-        		Commands.slash("say", "Say somthing as the bot.")
+        		Commands.slash("say", "Say something as the bot.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES))
         			.addOptions(new OptionData(OptionType.STRING, "message", "The message to send.", true).setRequiredLength(1, 2000), new OptionData(OptionType.STRING, "reply", "Optional message id to reply to.", false)),
         		Commands.slash("play", "Adds a song to the queue.")

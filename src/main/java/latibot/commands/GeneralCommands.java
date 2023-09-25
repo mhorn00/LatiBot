@@ -106,7 +106,7 @@ public class GeneralCommands {
 			try {
 				Files.createDirectories(Paths.get("emotes/"+emoji.getGuild().getName()));
 			} catch (IOException e1) {
-				LatiBot.LOG.error("Failed to create guild emote directoy '"+emoji.getGuild().getName()+"'",e1);
+				LatiBot.LOG.error("Failed to create guild emote directory '"+emoji.getGuild().getName()+"'",e1);
 			}
 			emoji.getImage().downloadToFile(new File("emotes/"+emoji.getGuild().getName()+"/"+emoji.getName()+(emoji.isAnimated()?".gif":".png"))).whenComplete((f,err) -> {
 				if (err == null) {
@@ -117,7 +117,7 @@ public class GeneralCommands {
 			});
 		});
 		} catch (IOException err) {
-			LatiBot.LOG.error("Failed to create emotes directoy.",err);
+			LatiBot.LOG.error("Failed to create emotes directory.",err);
 		}
 	}
 	
@@ -194,7 +194,7 @@ public class GeneralCommands {
 			List<CompletableFuture<List<Message>>> promises = new ArrayList<>();
 			for (TextChannel t : channels) {
 				String firstId = MessageHistory.getHistoryFromBeginning(t).limit(1).complete().getRetrievedHistory().get(0).getId();
-				LatiBot.LOG.info("Retived first id for " + t.getName());
+				LatiBot.LOG.info("Retrieved first id for " + t.getName());
 				promises.add(t.getIterableHistory().takeUntilAsync(0, m -> m.getId().equals(firstId)).whenCompleteAsync((msgs, err) -> {
 					if (err != null) {
 						LatiBot.LOG.error("Error getting messages in channel " + t.getName()+":", err);
