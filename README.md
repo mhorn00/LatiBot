@@ -8,3 +8,4 @@ Made for utility, to learn new topics, and for fun.
 - Count all custom emotes used in every channel the bot can see and give usage statistics
 - Text to Speech with DECtalk implemented with JNI to direct access the dll library
 - User nickname history tracking
+- Midnight

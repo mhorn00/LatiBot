@@ -34,6 +34,6 @@ public class MidnightManager {
     }
     
     public static void sendMidnight() {
-        LatiBot.jdaInst.getTextChannelById(499790886486671380l).sendMessage("midnight").queue((m) -> LatiBot.LOG.info("midnight"));
+        LatiBot.jdaInst.getTextChannelById(142409638556467200l).sendMessage("midnight").queue((m) -> LatiBot.LOG.info("midnight"));
     }
 }
