@@ -1,9 +1,8 @@
 package latibot.listeners;
 
-import latibot.commands.AudioCommands;
-import latibot.commands.AudioCommands.PlayCommands;
-import latibot.commands.GeneralCommands;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
+import latibot.command.AudioCommands;
+import latibot.command.AudioCommands.PlayCommands;
+import latibot.command.GeneralCommands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -11,6 +10,9 @@ public class CommandListener extends ListenerAdapter {
 	
 	@Override
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent e) {
+		
+		
+		
 		switch (e.getName()) {
 		
 		//Bot Control Commands
@@ -33,6 +35,9 @@ public class CommandListener extends ListenerAdapter {
 		case "ping":
 			GeneralCommands.pingCmd(e);
 			break;
+		case "wordle":
+			GeneralCommands.wordleCmd(e);
+			break;
 			
 		//Emote Commands
 		case "emotestats":
@@ -46,6 +51,10 @@ public class CommandListener extends ListenerAdapter {
 		case "q":
 		case "queue":
 			AudioCommands.queueCmd(e);
+			break;
+		case "np":
+		case "nowplaying":
+			AudioCommands.nowPlayingCmd(e);
 			break;
 		case "play":
 			AudioCommands.playCmd(e, PlayCommands.Normal);
@@ -84,10 +93,5 @@ public class CommandListener extends ListenerAdapter {
 			AudioCommands.speakCmd(e);
 			break;
 		}
-	}
-	
-	@Override
-	public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event) {
-		
 	}
 }

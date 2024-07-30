@@ -1,4 +1,4 @@
-package latibot.commands;
+package latibot.command;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,6 +77,16 @@ public class AudioCommands {
 			for (int i=1;i<out.length;i++) {
 				if (out[i]!=null && !out[i].isEmpty() && !out[i].isBlank()) e.getChannel().sendMessage(out[i]).setSuppressedNotifications(true).queue(hook -> hook.delete().queueAfter(60, TimeUnit.SECONDS));
 			}
+		}
+	}
+
+	public static void nowPlayingCmd(SlashCommandInteractionEvent e) {
+		if (tm == null) {
+			e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+		} else if (tm.getQueue().getCurrent() == null) {
+			e.reply("there isn't anything playing").setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+		} else {
+			e.reply("now playing: "+tm.getQueue().getCurrent().getAudioTrack().getInfo().title+" - Queued by "+tm.getQueue().getCurrent().getMember().getEffectiveName()).setSuppressedNotifications(true).queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
 		}
 	}
 	

@@ -10,9 +10,11 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
+import latibot.listeners.ActionListener;
 import latibot.listeners.CommandListener;
 import latibot.listeners.NicknameListener;
 import latibot.listeners.ReadyListener;
+import latibot.utils.MidnightManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -26,6 +28,19 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
+/* TODO: General
+ *  - Rewrite latibot in dart lol
+ *  - Wordle stats
+ *  - midnight stats
+ *  - reminders?
+ *  - speak cmd in chat
+ *  - make dectalk louder lol
+ *  - dectalk copy pastas
+ *  - random sound effects
+ *  - fake quote cmd
+ *  - music controls via buttons
+ */
+
 public class LatiBot {
 	
 	public static JDA jdaInst;
@@ -35,12 +50,12 @@ public class LatiBot {
 	
     public static void main(String[] args) throws IOException {
         jdaInst = JDABuilder.createDefault(new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
-        		.setActivity(Activity.watching("the fog coming"))
+        		.setActivity(Activity.watching("for midnight..."))
         		.setMemberCachePolicy(MemberCachePolicy.ALL)
-        		.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
+        		.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGE_REACTIONS)
         		.enableCache(CacheFlag.VOICE_STATE)
         		.setChunkingFilter(ChunkingFilter.ALL)
-        		.addEventListeners(new CommandListener(), new NicknameListener(), new ReadyListener()).build();
+        		.addEventListeners(new CommandListener(), new NicknameListener(), new ReadyListener(), new ActionListener()).build();
         jdaInst.updateCommands().addCommands(
         		Commands.slash("ping", "Pong!"), 
         		Commands.slash("emotestats", "Calculates emote usage statistics for the server. Will take a long time most likely.")
@@ -85,6 +100,10 @@ public class LatiBot {
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
         		Commands.slash("q", "Display the current queue.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
+				Commands.slash("nowplaying", "Displays the currnetly playing track.")
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
+				Commands.slash("np", "Displays the currnetly playing track.")
+        			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK)),
         		Commands.slash("speak", "Speak using DECtalk.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_SPEAK))
         			.addOptions(new OptionData(OptionType.STRING, "text", "Text to speak.", true)),
@@ -92,10 +111,17 @@ public class LatiBot {
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)),
         		Commands.slash("nicknames", "Check the nickname history for a user.")
         			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_SEND))
-        			.addOptions(new OptionData(OptionType.USER, "user", "The user to get the nicknames for.", true))
+        			.addOptions(new OptionData(OptionType.USER, "user", "The user to get the nicknames for.", true)),
+				Commands.slash("wordle", "Display wordle stats.")
+					.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_SEND))
+					.addOptions(new OptionData(OptionType.USER, "user", "The user to get the wordle stats for.", true)),
+				Commands.slash("recalcwordle", "Recalculate wordle stats.")
+					.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
         		).queue();
         
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
         audioPlayer = audioPlayerManager.createPlayer();
+
+		MidnightManager.scheduleMidnight();
     }
 }

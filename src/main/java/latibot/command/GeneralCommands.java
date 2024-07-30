@@ -1,4 +1,4 @@
-package latibot.commands;
+package latibot.command;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class GeneralCommands {
 
@@ -67,14 +68,20 @@ public class GeneralCommands {
 	
 	public static void nicknameCmd(SlashCommandInteractionEvent e) {
 		Member user = e.getOption("user").getAsMember();
-		String nickname = e.getOption("nickname").getAsString();
-		LatiBot.LOG.info("User "+e.getUser().getEffectiveName() + " used the 'nickname' command with args "+user.getUser().getName()+" "+nickname);
+		String newNickname = e.getOption("nickname").getAsString();
+		String oldNickname = user.getNickname();
+		oldNickname = oldNickname != null ? oldNickname : "null";
+		LatiBot.LOG.info("User "+e.getUser().getName() + " used the 'nickname' command with args "+user.getUser().getName()+" "+newNickname);
+		String hash = NicknameListener.hashNameChange(oldNickname, newNickname, user.getId());
 		if (!user.isOwner()) {
-			user.modifyNickname(nickname).queue();
-			e.reply("Set nickname of "+user.getUser().getName()+" to "+nickname).setEphemeral(true).queue();
+			NicknameListener.addHash(hash,new NicknameListener.NicknameCmdInfo(oldNickname, newNickname, user.getId(), e.getUser().getId(), hash));
+			user.modifyNickname(newNickname).queue();
+			e.reply("Set nickname of "+user.getUser().getName()+" from '"+oldNickname+"' to '"+newNickname+"'").setEphemeral(true).queue();
 		} else {
-			e.getGuild().getSystemChannel().sendMessage(e.getUser().getAsMention() + " updated your nickname to '"+nickname+"' "+e.getGuild().getOwner().getAsMention()).queue();
-			e.reply("\"Set\" nickname of "+user.getUser().getName()+" to " + nickname).setEphemeral(true).queue();
+			NicknameListener.addHash(hash,new NicknameListener.NicknameCmdInfo(oldNickname, newNickname, user.getId(), e.getUser().getId(), hash, e.getGuild().getSystemChannel().sendMessage(e.getUser().getAsMention() + " updated your nickname to '"+newNickname+"' "+e.getGuild().getOwner().getAsMention()).addActionRow(
+				Button.success(hash+"-OK", Emoji.fromCustom("smwOK", 1150941028291985478l, false)),
+				Button.danger(hash+"-NO", Emoji.fromCustom("smwNO", 1150941027360854067l, false))).complete().getId()));
+			e.reply("\"Set\" nickname of "+user.getUser().getName()+" from '"+oldNickname+"' to '"+newNickname+"'").setEphemeral(true).queue();
 		}
 	}
 	
@@ -89,7 +96,7 @@ public class GeneralCommands {
 			return;
 		}
 		for (NicknameEntry entry : userHistory.getNicknames()) {
-			reply += entry.nickname + " - " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(entry.date)+"\n";
+			reply += entry.nickname + " - " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(entry.date)+" - Changed by " + e.getGuild().getMemberById(entry.changedById).getUser().getName() +"\n";
 		}
 		e.reply(reply).queue();
 	}
@@ -185,7 +192,10 @@ public class GeneralCommands {
 		e.reply("Pong!").setEphemeral(true).flatMap(v -> e.getHook().editOriginalFormat("Pong! (%d ms)", System.currentTimeMillis() - time)).queue();
 	}
 	
-	
+	public static void wordleCmd(SlashCommandInteractionEvent e) {
+		
+	}
+
 	//======== Helpers ========
 	
 	private static CompletableFuture<ConcurrentMap<TextChannel, List<Message>>> getMsgs(final List<TextChannel> channels, ScheduledExecutorService ex) {

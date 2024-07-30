@@ -38,19 +38,19 @@ sourceSets {
 task compileNative(type: Exec, group: 'build') {
 //this doesnt work bc compiling with gcc causes some unspecified problem. im just using microsoft visual c instead
 //see note in latibot.audio.DecTalkWrapper for more info
-	dependsOn compileJava
-	workingDir project.projectDir
-	def javaHome = System.getenv('JAVA_HOME')
-	if (javaHome == null) {throw new GradleException("JAVA_HOME environment variable is not set.")}
-	commandLine 'gcc', '-m64', '-Wall', '-Wl,--kill-at', '-shared', '-o', 'DecTalkWrapper.dll', 'src/main/c/DecTalkWrapper.c',
-            '-Isrc/main/c', "-I${javaHome}\\include", "-I${javaHome}\\include\\win32",
-            '-Ibuild/generated/sources/headers/java/main', '-Llib', '-ldectalk'
+	// dependsOn compileJava
+	// workingDir project.projectDir
+	// def javaHome = System.getenv('JAVA_HOME')
+	// if (javaHome == null) {throw new GradleException("JAVA_HOME environment variable is not set.")}
+	// commandLine 'gcc', '-m64', '-Wall', '-Wl,--kill-at', '-shared', '-o', 'DecTalkWrapper.dll', 'src/main/c/DecTalkWrapper.c',
+    //         '-Isrc/main/c', "-I${javaHome}\\include", "-I${javaHome}\\include\\win32",
+    //         '-Ibuild/generated/sources/headers/java/main', '-Llib', '-ldectalk'
 	
-	environment 'PATH', System.getenv('PATH')
-	standardOutput = new ByteArrayOutputStream()
-    ext.output = {
-        return standardOutput.toString()
-    }
+	// environment 'PATH', System.getenv('PATH')
+	// standardOutput = new ByteArrayOutputStream()
+    // ext.output = {
+    //     return standardOutput.toString()
+    // }
 }
 
 //build.dependsOn compileNative
