@@ -14,7 +14,7 @@ public class MidnightManager {
     
     public static void scheduleMidnight() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Chicago"));
-        ZonedDateTime nextMidnight = now.withHour(0).withMinute(0).withSecond(2);
+        ZonedDateTime nextMidnight = now.withHour(0).withMinute(0).withSecond(12);
         if (now.compareTo(nextMidnight) > 0)
             nextMidnight = nextMidnight.plusDays(1);
 
@@ -34,6 +34,6 @@ public class MidnightManager {
     }
     
     public static void sendMidnight() {
-        LatiBot.jdaInst.getTextChannelById(142409638556467200l).sendMessage("midnight").queue((m) -> LatiBot.LOG.info("midnight"));
+        LatiBot.jdaInst.getTextChannelById(142409638556467200l).sendMessage("midnight").setSuppressedNotifications(true).queue((m) -> LatiBot.LOG.info("midnight"));
     }
 }
