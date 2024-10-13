@@ -20,6 +20,7 @@ public class ShutdownCmd extends BaseCommand {
         e.getGuild().getAudioManager().closeAudioConnection();
         e.reply("ok bye bye!").complete();
         e.getJDA().shutdown();
+        System.exit(0);
     }
 
     @Override
