@@ -73,7 +73,7 @@ public class LatiBot {
 				return v.buildCommand();
 			}).toList()
 		).complete();
-        
+
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
         audioPlayer = audioPlayerManager.createPlayer();
 

@@ -39,6 +39,10 @@ public class NicknamesCmd extends BaseCommand {
 			reply += entry.nickname + " - " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(entry.date)
 					+ " - Changed by " + e.getGuild().getMemberById(entry.changedById).getUser().getName() + "\n";
 		}
+		if (reply.length() > 2000) {
+			e.reply("The nickname history for " + user.getEffectiveName() + " is too long to display lol").queue();
+			return;
+		}
 		e.reply(reply).queue();
 	}
 
