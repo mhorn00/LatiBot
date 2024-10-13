@@ -1,3 +1,4 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.format.settings.url": "file:///D:/Workspaces/VS Code/Java/LatiBot v1.1/.vscode/eclipse-java-formatter.xml"
 }
