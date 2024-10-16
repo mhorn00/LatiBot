@@ -27,20 +27,23 @@ public class MidnightManager {
 
     private static void scheduleNextRun(Runnable midnightTask) {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Chicago"));
-        ZonedDateTime nextMidnight = now.withHour(0).withMinute(0).withSecond(5).withNano(0);
-        if (now.compareTo(nextMidnight) > 0) {
+        ZonedDateTime nextMidnight = now.plusDays(1).withHour(0).withMinute(0).withSecond(5).withNano(0);
+        if (now.isAfter(nextMidnight)) {
             nextMidnight = nextMidnight.plusDays(1);
-        }
+            LatiBot.LOG.info("huh???");
+        } 
 
         Duration duration = Duration.between(now, nextMidnight);
         long initialDelay = duration.getSeconds();
+
+        LatiBot.LOG.info("Scheduling next midnight task in " + duration.toHours() + " hours and " + duration.toMinutesPart() + " minuets from now");
 
         scheduler.schedule(midnightTask, initialDelay, TimeUnit.SECONDS);
     }
 
     public static void sendMidnight() {
         LatiBot.jdaInst.getTextChannelById(142409638556467200L)
-            .sendMessage("midnight")
+            .sendMessage("please god dont spam again")
             .setSuppressedNotifications(true)
             .queue((m) -> LatiBot.LOG.info("midnight"));
     }
