@@ -10,6 +10,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 
+import latibot.LatiBot;
+
 public class MessageListener extends ListenerAdapter {
 
     private final String urlRegex = ".*(https?://(www\\.)?\\w+\\.com).*";
@@ -37,7 +39,7 @@ public class MessageListener extends ListenerAdapter {
         if (author.isBot()) return;
         Message message = event.getMessage();
         String content = message.getContentRaw();
-        if(content.contains("riggbot are you alive")) message.getChannel().sendMessage("im alive!").queue();
+        if(content.startsWith("latibot are you alive")) message.getChannel().sendMessage("you know it baby!!").queue();
         //checks for any link
         if (content.contains("https://")) {
             boolean isReplaced = false;
@@ -64,7 +66,7 @@ public class MessageListener extends ListenerAdapter {
             }
             return true;
         } catch (IOException e) {
-            System.err.println("Error writing to file: " + e.getMessage());
+            LatiBot.LOG.error("Error writing to file: " + e.getMessage());
             return false;
         }
     }
