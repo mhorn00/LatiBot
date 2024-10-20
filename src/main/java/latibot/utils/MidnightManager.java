@@ -43,7 +43,7 @@ public class MidnightManager {
 
     public static void sendMidnight() {
         LatiBot.jdaInst.getTextChannelById(142409638556467200L)
-            .sendMessage("please god dont spam again")
+            .sendMessage("midnight")
             .setSuppressedNotifications(true)
             .queue((m) -> LatiBot.LOG.info("midnight"));
     }
