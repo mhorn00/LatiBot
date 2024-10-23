@@ -47,6 +47,8 @@ public class MessageListener extends ListenerAdapter {
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
+        if(!content.startsWith("riggbot")) return;
+
         //quick link check
         if (content.contains("https://")) {
             StringBuilder reply = new StringBuilder();
@@ -60,7 +62,7 @@ public class MessageListener extends ListenerAdapter {
                 }
             }
             if (!reply.toString().isEmpty()) {
-                message.reply(reply).setSuppressedNotifications(true).queue();
+                message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
                 message.suppressEmbeds(true).queue();
             }
         }
