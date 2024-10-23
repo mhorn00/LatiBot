@@ -65,7 +65,7 @@ public class LatiBot {
                 .enableCache(CacheFlag.VOICE_STATE)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .addEventListeners(new CommandListener(), new NicknameListener(), new ReadyListener(),
-                        new ActionListener(), new MessageListener())
+                        new ActionListener(), new MessageListener(), new ReactionListener())
                 .build();
 
         List<SlashCommandData> cmds = Commands.COMMANDS.getCommands().values().stream().flatMap((v) -> {
