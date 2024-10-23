@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class MessageListener extends ListenerAdapter {
 
     private static final Pattern urlRegex = Pattern.compile(
-            "(?<fullLink>(https?://(www\\.)?)(?<domain>\\w+\\.com)(.*?(\\?|\\s)))");
+            "(?<fullLink>https?://(www\\.)?((?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b([-a-zA-Z0-9()@:%_+.~#&/=]*)))");
 
     private static final HashMap<String, String> domains = new HashMap<>();
 
@@ -36,7 +36,6 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.error("Error reading UrlReplacements.txt");
             throw new RuntimeException(e);
         }
-
     }
 
     @Override
