@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class MessageListener extends ListenerAdapter {
 
     private static final Pattern urlRegex = Pattern.compile(
-            "(?<fullLink>(https?://(www\\.)?)(?<domain>\\w+\\.com)(.*?(\\?|\\s)))");
+            "(?<fullLink>https?://(www\\.)?((?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b([-a-zA-Z0-9()@:%_+.~#&/=]*)))");
 
     private static final HashMap<String, String> domains = new HashMap<>();
 
@@ -38,7 +38,6 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.error("Error reading UrlReplacements.txt");
             throw new RuntimeException(e);
         }
-
     }
 
     @Override
@@ -47,6 +46,8 @@ public class MessageListener extends ListenerAdapter {
         if (author.isBot()) return; //must be a user message
         Message message = event.getMessage();
         String content = message.getContentRaw();
+
+        if(!content.startsWith("riggbot")) return;
 
         //quick link check
         if (content.contains("https://")) {
@@ -61,7 +62,7 @@ public class MessageListener extends ListenerAdapter {
                 }
             }
             if (!reply.toString().isEmpty()) {
-                message.reply(reply).setSuppressedNotifications(true).queue();
+                message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
                 message.suppressEmbeds(true).queue();
             }
         }

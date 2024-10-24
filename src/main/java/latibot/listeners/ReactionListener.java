@@ -14,7 +14,7 @@ public class ReactionListener extends ListenerAdapter {
         //TODO: replace riggbot with latibot
         if(!message.getAuthor().isBot()&&!message.getAuthor().getName().equals("riggbot")) return;
 
-        if(event.getEmoji().toString().equals("🔁")){
+        if(event.getEmoji().toString().equals("UnicodeEmoji(codepoints=U+1f501)")){
             message.editMessage(message.getContentRaw()).queue();
             message.removeReaction(event.getEmoji(),event.getUser()).queue();
         }
