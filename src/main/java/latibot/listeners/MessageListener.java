@@ -63,7 +63,7 @@ public class MessageListener extends ListenerAdapter {
         String content = message.getContentRaw();
 
         // 420 & 69
-        if (content.matches("\\b4:?20\\b") || content.matches("\\b69\\b")) {
+        if (content.matches(".*\\b4:?20\\b.*") || content.matches(".*\\b69\\b.*")) {
             event.getChannel().sendMessage("nice").setSuppressedNotifications(true).queue();
             return;
         }
