@@ -11,9 +11,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -26,16 +29,28 @@ public class MessageListener extends ListenerAdapter {
         return domains;
     }
 
+    private static final List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
+    private static final int answersTotalWeight;
+
     static {
-        try {
-            String[] urlReplacements = new String(Files.readAllBytes(Path.of("UrlReplacements.txt"))).split("\n");
-            // urlReplacements[0] = urlReplacements[0].substring(0, urlReplacements[0].length() - 1);
-            for (String s : urlReplacements) {
-                domains.put(s.substring(0, s.indexOf("|")),
-                        s.substring(s.indexOf("|") + 1).strip());
-            }
+        // ngl chatgpt suggested using streams for this and i really liked it
+
+        // Loading URL Replacements
+        try (Stream<String> urlReplacements = Files.lines(Path.of("UrlReplacements.txt"))) {
+            urlReplacements.map(line -> line.split("\\|"))
+                    .forEach(parts -> domains.put(parts[0], parts[1]));
         } catch (IOException e) {
-            LatiBot.LOG.error("Error reading UrlReplacements.txt");
+            LatiBot.LOG.error("Error reading UrlReplacements.txt", e);
+            throw new RuntimeException(e);
+        }
+
+        // Loading Yes/No Answers
+        try (Stream<String> answers = Files.lines(Path.of("YesNoAnswers.txt"))) {
+            answers.map(line -> line.split("\\|"))
+                    .forEach(parts -> yesNoAnswers.add(new YesNoAnswer(Integer.parseInt(parts[0]), parts[1])));
+            answersTotalWeight = yesNoAnswers.stream().mapToInt(YesNoAnswer::weight).sum();
+        } catch (IOException e) {
+            LatiBot.LOG.error("Error reading YesNoAnswers.txt", e);
             throw new RuntimeException(e);
         }
     }
@@ -47,33 +62,32 @@ public class MessageListener extends ListenerAdapter {
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
-        if(content.matches("\\b4:?20\\b") || content.matches("\\b69\\b")) {
+        // 420 & 69
+        if (content.matches("\\b4:?20\\b") || content.matches("\\b69\\b")) {
             event.getChannel().sendMessage("nice").setSuppressedNotifications(true).queue();
             return;
         }
 
-        //quick link check
-        if (content.contains("https://")) {
-            StringBuilder reply = new StringBuilder();
-            Matcher matcher = urlRegex.matcher(content);
-            //actual link check
-            while (matcher.find()) {
-                if (domains.get(matcher.group("domain")) != null) {
-                    reply.append(matcher.group("fullLink")
-                            .replace(matcher.group("domain"), domains.get(matcher.group("domain"))))
-                            .append("\n");
-                }
-            }
-            if (!reply.toString().isEmpty()) {
-                message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
-                message.suppressEmbeds(true).queue();
+        // Link detection and url replacement
+        Matcher matcher = urlRegex.matcher(content);
+        StringBuilder reply = new StringBuilder();
+        while (matcher.find()) {
+            String domain = matcher.group("domain");
+            String replacement = domains.get(domain);
+            if (replacement != null) {
+                reply.append(matcher.group("fullLink").replace(domain, replacement)).append("\n");
             }
         }
-        /*
-        if (content.toLowerCase().matches("^riggbot (am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must).+")) {
-            Random random = new Random();
-            message.getChannel().sendMessage(yesNoAnswers.get(random.nextInt(yesNoAnswers.size()))).queue();
-        }*/
+        if (!reply.isEmpty()) {
+            message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false)
+                    .queue(q -> message.suppressEmbeds(true).queue());
+        }
+
+        // Yes/No question detection & response
+        if (content.toLowerCase().matches(
+                "^riggbot\\s+(am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must)\\b.+")) {
+            message.getChannel().sendMessage(getRandomYesNoAnswer()).queue();
+        }
     }
 
     public static boolean saveUrlReplacements() {
@@ -87,8 +101,20 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.info("Changes were saved to UrlReplacements.txt");
             return true;
         } catch (IOException e) {
-            LatiBot.LOG.error("Error writing to file: " + e.getMessage());
+            LatiBot.LOG.error("Error writing to UrlReplacements.txt", e);
             return false;
         }
+    }
+
+    private String getRandomYesNoAnswer() {
+        int rand = (int) Math.ceil(Math.random() * answersTotalWeight);
+        for (YesNoAnswer answer : yesNoAnswers) {
+            rand -= answer.weight;
+            if (rand < 0) return answer.answer;
+        }
+        return "I... uh... well, you see... I'm broken... please help me.";
+    }
+
+    private record YesNoAnswer(int weight, String answer) {
     }
 }
