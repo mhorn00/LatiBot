@@ -47,7 +47,10 @@ public class MessageListener extends ListenerAdapter {
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
-        if(!content.startsWith("riggbot")) return;
+        if(content.matches("\\b4:?20\\b") || content.matches("\\b69\\b")) {
+            event.getChannel().sendMessage("nice").setSuppressedNotifications(true).queue();
+            return;
+        }
 
         //quick link check
         if (content.contains("https://")) {
