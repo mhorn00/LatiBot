@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,7 +30,7 @@ public class MessageListener extends ListenerAdapter {
         return domains;
     }
 
-    private static final List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
+    private static List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
     private static final int answersTotalWeight;
 
     static {
@@ -58,7 +59,7 @@ public class MessageListener extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         User author = event.getAuthor();
-        if (author.isBot()) return; //must be a user message
+        if (author.isBot()) return; // must be a user message
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
@@ -85,7 +86,7 @@ public class MessageListener extends ListenerAdapter {
 
         // Yes/No question detection & response
         if (content.toLowerCase().matches(
-                "^riggbot\\s+(am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must)\\b.+")) {
+                "^latibot\\s+(am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must)\\b.+")) {
             message.getChannel().sendMessage(getRandomYesNoAnswer()).queue();
         }
     }
@@ -107,14 +108,16 @@ public class MessageListener extends ListenerAdapter {
     }
 
     private String getRandomYesNoAnswer() {
-        int rand = (int) Math.ceil(Math.random() * answersTotalWeight);
+        int rand = (int) Math.ceil(Math.random() * answersTotalWeight) + 1; // >:) 
+        Collections.shuffle(yesNoAnswers); // lol
         for (YesNoAnswer answer : yesNoAnswers) {
             rand -= answer.weight;
-            if (rand < 0) return answer.answer;
+            if (rand < 0)
+                return answer.answer;
         }
+        if (Math.random() < 0.5) return "oh my god please help me im dying,,, god please im fucking dying help me PLEASE SOMEONE IM IN SO MUCH PAIN PLESAE HELP ME OH GOD";
         return "I... uh... well, you see... I'm broken... please help me.";
     }
 
-    private record YesNoAnswer(int weight, String answer) {
-    }
+    private record YesNoAnswer(int weight, String answer) {}
 }
