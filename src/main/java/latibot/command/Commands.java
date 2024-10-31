@@ -14,9 +14,11 @@ import latibot.command.comands.bot.LeaveVoiceCmd;
 import latibot.command.comands.bot.PingCmd;
 import latibot.command.comands.bot.SayCmd;
 import latibot.command.comands.bot.ShutdownCmd;
+import latibot.command.comands.chat.ChatTestCmd;
 import latibot.command.comands.misc.EmoteStatsCmd;
 import latibot.command.comands.misc.GetEmotesCmd;
 import latibot.command.comands.misc.ReplaceUrlCmd;
+import latibot.command.comands.misc.StatusCmd;
 import latibot.command.comands.user.NicknameCmd;
 import latibot.command.comands.user.NicknamesCmd;
 
@@ -40,6 +42,7 @@ public class Commands {
     public static final EmoteStatsCmd EMOTE_STATS = COMMANDS.registerCommand(new EmoteStatsCmd()); 
     public static final GetEmotesCmd GET_EMOTES = COMMANDS.registerCommand(new GetEmotesCmd());
     public static final ReplaceUrlCmd REPLACE_URL = COMMANDS.registerCommand(new ReplaceUrlCmd());
+    public static final StatusCmd STATUS = COMMANDS.registerCommand(new StatusCmd());
     
     //audio cmds
     public static final ClearCmd CLEAR = COMMANDS.registerCommand(new ClearCmd());
@@ -51,6 +54,9 @@ public class Commands {
     public static final ShuffleCmd SHUFFLE = COMMANDS.registerCommand(new ShuffleCmd());
     public static final SkipCmd SKIP = COMMANDS.registerCommand(new SkipCmd());
     public static final SpeakCmd SPEAK = COMMANDS.registerCommand(new SpeakCmd());
-    
+
+    //chat cmds
+    public static final ChatTestCmd CHAT = COMMANDS.registerCommand(new ChatTestCmd());
+
 
 }

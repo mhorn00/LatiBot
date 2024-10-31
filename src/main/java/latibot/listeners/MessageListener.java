@@ -1,11 +1,5 @@
 package latibot.listeners;
 
-import latibot.LatiBot;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,9 +9,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import io.github.sashirestela.openai.domain.chat.Chat;
+import latibot.LatiBot;
+import latibot.chat.ApiDriver;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -69,6 +72,8 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
 
+        // WebhookClient client = WebhookClient.createClient(null, content, content)
+
         // Link detection and url replacement
         Matcher matcher = urlRegex.matcher(content);
         StringBuilder reply = new StringBuilder();
@@ -84,10 +89,21 @@ public class MessageListener extends ListenerAdapter {
                     .queue(q -> message.suppressEmbeds(true).queue());
         }
 
-        // Yes/No question detection & response
-        if (content.toLowerCase().matches(
-                "^latibot\\s+(am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must)\\b.+")) {
-            message.getChannel().sendMessage(getRandomYesNoAnswer()).queue();
+        // respond!
+        String keywordRegex = "^(hey\\s)?lati(bot)?,?";
+        if (content.toLowerCase().matches(keywordRegex+".+")) {
+        
+            CompletableFuture<Chat> respond = ApiDriver.ask(content);
+            respond.thenAccept(chat -> {
+                String response = chat.firstContent();
+                message.reply(response).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
+            });
+           
+            // if (content.toLowerCase().matches(keywordRegex+"\\s+(so|was|am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must).+")) {
+                
+            // } else if (content.toLowerCase().matches(keywordRegex+"\\s+(what do you think about|what about|rate).+")) {
+
+            // }
         }
     }
 

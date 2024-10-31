@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'io.github.sashirestela:simple-openai:3.9.0'
     implementation 'net.dv8tion:JDA:5.1.2'
     implementation 'ch.qos.logback:logback-classic:1.5.9'
 	implementation 'com.github.walkyst:lavaplayer-fork:1.4.3'

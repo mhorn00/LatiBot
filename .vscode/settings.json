@@ -1,4 +1,79 @@
 {
     "java.compile.nullAnalysis.mode": "disabled",
-    "java.format.settings.url": "file:///D:/Workspaces/VS Code/Java/LatiBot v1.1/.vscode/eclipse-java-formatter.xml"
+    "java.format.settings.url": "file:///D:/Workspaces/VS Code/Java/LatiBot v1.1/.vscode/eclipse-java-formatter.xml",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "better-comments.tags": [
+        {
+          "tag": "!",
+          "color": "#FF2D00",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "tag": "?",
+          "color": "#3498DB",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "tag": "^",
+          "color": "#9915d1",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "tag": "todo",
+          "color": "#FF8C00",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "tag": "fixme",
+          "color": "#c0331f",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "tag": "/",
+          "color": "#5a8760",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "tag": ">",
+          "color": "#575757",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "tag": "[",
+          "color": "#3d74af",
+          "strikethrough": false,
+          "underline": false,
+          "backgroundColor": "transparent",
+          "bold": false,
+          "italic": false
+        }
+      ],
 }

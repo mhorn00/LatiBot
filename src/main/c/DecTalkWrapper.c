@@ -113,7 +113,7 @@ JNIEXPORT jint JNICALL Java_latibot_audio_DecTalkWrapper_TextToSeechSpeak(JNIEnv
 
 	status = TextToSpeechOpenWaveOutFile(globalTTSRef, file, WAVE_FORMAT_1M16);
 	status = TextToSpeechSpeak(globalTTSRef, str, TTS_FORCE);
-	status = TextToSpeechSpeak(globalTTSRef, "       ", TTS_FORCE);
+	// status = TextToSpeechSpeak(globalTTSRef, "       ", TTS_FORCE);
 	status = TextToSpeechSync(globalTTSRef);
 	status = TextToSpeechCloseWaveOutFile(globalTTSRef); 
 

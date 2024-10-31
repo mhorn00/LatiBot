@@ -63,6 +63,9 @@ local.properties
 
 #lol dont include discord token
 src/main/resources/token.txt
+# also dont include the openai key lol
+src/main/resources/openai_key.txt
+
 
 #tts wav directory
 tts
