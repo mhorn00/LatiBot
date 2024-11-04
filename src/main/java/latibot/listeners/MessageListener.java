@@ -1,5 +1,13 @@
 package latibot.listeners;
 
+import io.github.sashirestela.openai.domain.chat.Chat;
+import latibot.LatiBot;
+import latibot.chat.ApiDriver;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,19 +22,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import io.github.sashirestela.openai.domain.chat.Chat;
-import latibot.LatiBot;
-import latibot.chat.ApiDriver;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
 public class MessageListener extends ListenerAdapter {
 
+    // this thing is getting really stupid and so am i, but it does seem
+    // to consistently work even if its probably overdone. also chatgpt
+    // can't seem to figure out how to suggest any changes to it that wont
+    // also break it, but honestly i dont really blame it
     private static final Pattern urlRegex = Pattern.compile(
-            "(?<fullLink>https?://(www\\.)?((?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b([-a-zA-Z0-9()@:%_+.~#&/=]*)))");
-
+            "(\\|\\|.*?(?=.*\\|\\|))?" +
+                    "(?<fullLink>https?://(www\\.)?" +
+                    "(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\." +
+                    "[a-zA-Z0-9()]{1,6})\\b" +
+                    "([-a-zA-Z0-9()@:%_+.~#&/=]*))" +
+                    "(.*?\\|\\|(?<=\\|\\|))?");
     private static final HashMap<String, String> domains = new HashMap<>();
 
     public static HashMap<String, String> getDomains() {
@@ -72,6 +80,10 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
 
+        //FIXME RIGGBOT GAURDRAIL
+        //if (!content.toLowerCase().contains("riggbot")) return;
+        //FIXME RIGGBOT GAURDRAIL
+
         // WebhookClient client = WebhookClient.createClient(null, content, content)
 
         // Link detection and url replacement
@@ -81,26 +93,30 @@ public class MessageListener extends ListenerAdapter {
             String domain = matcher.group("domain");
             String replacement = domains.get(domain);
             if (replacement != null) {
-                reply.append(matcher.group("fullLink").replace(domain, replacement)).append("\n");
+                boolean isSpoiler = matcher.group().startsWith("||") && matcher.group().endsWith("||");
+                reply.append(isSpoiler ? "||" : "")
+                        .append(matcher.group("fullLink").replace(domain, replacement))
+                        .append(isSpoiler ? " ||" : "")
+                        .append("\n");
             }
         }
         if (!reply.isEmpty()) {
-            message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false)
-                    .queue(q -> message.suppressEmbeds(true).queue());
+            message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).complete();
+            message.suppressEmbeds(true).queue();
         }
 
         // respond!
         String keywordRegex = "^(hey\\s)?lati(bot)?,?";
-        if (content.toLowerCase().matches(keywordRegex+".+")) {
-        
+        if (content.toLowerCase().matches(keywordRegex + ".+")) {
+
             CompletableFuture<Chat> respond = ApiDriver.ask(content);
             respond.thenAccept(chat -> {
                 String response = chat.firstContent();
                 message.reply(response).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
             });
-           
+
             // if (content.toLowerCase().matches(keywordRegex+"\\s+(so|was|am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must).+")) {
-                
+
             // } else if (content.toLowerCase().matches(keywordRegex+"\\s+(what do you think about|what about|rate).+")) {
 
             // }
@@ -131,9 +147,11 @@ public class MessageListener extends ListenerAdapter {
             if (rand < 0)
                 return answer.answer;
         }
-        if (Math.random() < 0.5) return "oh my god please help me im dying,,, god please im fucking dying help me PLEASE SOMEONE IM IN SO MUCH PAIN PLESAE HELP ME OH GOD";
+        if (Math.random() < 0.5)
+            return "oh my god please help me im dying,,, god please im fucking dying help me PLEASE SOMEONE IM IN SO MUCH PAIN PLESAE HELP ME OH GOD";
         return "I... uh... well, you see... I'm broken... please help me.";
     }
 
-    private record YesNoAnswer(int weight, String answer) {}
+    private record YesNoAnswer(int weight, String answer) {
+    }
 }
