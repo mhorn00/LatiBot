@@ -1,33 +1,32 @@
 package latibot;
 
-import java.io.IOException;
-import java.util.stream.Stream;
-import java.util.List;
-
-import latibot.listeners.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-
 import latibot.audio.DecTalkWrapper;
 import latibot.audio.TrackManager;
-import latibot.chat.ApiDriver;
 import latibot.command.Commands;
+import latibot.listeners.*;
 import latibot.utils.MidnightManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
 
 /* TODO: General
  *  - Rewrite latibot in dart lol
@@ -61,7 +60,7 @@ public class LatiBot {
         jdaInst = JDABuilder
                 .createDefault(
                         new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
-                .setActivity(Activity.watching("for midnight..."))
+                .setActivity(Activity.competing("the US Presidential Election"))
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT,
                         GatewayIntent.GUILD_MESSAGE_REACTIONS)
@@ -79,34 +78,36 @@ public class LatiBot {
         }
 
 
-        LOG.info("Latibot is in "+jdaInst.getGuilds().size()+" guilds");
+        LOG.info("Latibot is in " + jdaInst.getGuilds().size() + " guilds");
 
         //> Check needed perms
         List<Permission> perms = List.of(
-            Permission.VOICE_CONNECT,
-            Permission.VOICE_SPEAK,
-            Permission.VOICE_USE_VAD,
-            Permission.MESSAGE_MANAGE,
-            Permission.MESSAGE_SEND,
-            Permission.MESSAGE_ADD_REACTION,
-            Permission.MESSAGE_ATTACH_FILES,
-            Permission.MESSAGE_EMBED_LINKS,
-            Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
-            Permission.MESSAGE_HISTORY,
-            Permission.MANAGE_WEBHOOKS,
-            Permission.NICKNAME_CHANGE,
-            Permission.NICKNAME_MANAGE,
-            Permission.MESSAGE_EXT_EMOJI,
-            Permission.MESSAGE_EXT_STICKER
+                Permission.VOICE_CONNECT,
+                Permission.VOICE_SPEAK,
+                Permission.VOICE_USE_VAD,
+                Permission.MESSAGE_MANAGE,
+                Permission.MESSAGE_SEND,
+                Permission.MESSAGE_ADD_REACTION,
+                Permission.MESSAGE_ATTACH_FILES,
+                Permission.MESSAGE_EMBED_LINKS,
+                //Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
+                Permission.MESSAGE_HISTORY,
+                Permission.MANAGE_WEBHOOKS,
+                Permission.NICKNAME_CHANGE,
+                Permission.NICKNAME_MANAGE,
+                Permission.MESSAGE_EXT_EMOJI,
+                Permission.MESSAGE_EXT_STICKER
         );
 
         boolean okFlag = true;
-        Guild guild = jdaInst.getGuildById(142409638556467200L);
-        LOG.info("Checking permissions in guild "+guild.getName());
+        Guild guild = jdaInst.getGuildById(142409638556467200L); //LATV
+        //Guild guild = jdaInst.getGuildById(968236034250924052L); //RiggBot Testing
+        LOG.info("Checking permissions in guild " + guild.getName());
         for (Permission perm : perms) {
             if (!guild.getSelfMember().hasPermission(perm)) {
                 LOG.error("Missing permission: " + perm.getName());
-                guild.getSystemChannel().sendMessage("Missing permission: " + perm.getName()).queue((s) -> {}, (f) -> LOG.info("Failed to send missing permission message"));
+                guild.getSystemChannel().sendMessage("Missing permission: " + perm.getName()).queue((s) -> {
+                }, (f) -> LOG.info("Failed to send missing permission message"));
                 okFlag = false;
             }
         }
@@ -115,6 +116,18 @@ public class LatiBot {
             jdaInst.shutdown();
             System.exit(-3);
         }
+
+        // Loading webhooks
+        LatiBot.LOG.info("Retrieving WebHooks");
+        HashMap<Long, String> webhookUrls = new HashMap<>();
+        List<Webhook> webhooks = guild.retrieveWebhooks().complete();
+        for (Webhook w : webhooks) {
+            if (w.getName().equals("Url Replacer")) {
+                LatiBot.LOG.info("Url Replacer Webhook found in Channel: {}", w.getChannel().getName());
+                webhookUrls.put(w.getChannel().getIdLong(), w.getUrl());
+            }
+        }
+        MessageListener.setWebhookUrls(webhookUrls);
 
 
         List<SlashCommandData> cmds = Commands.COMMANDS.getCommands().values().stream().flatMap((v) -> {
@@ -134,7 +147,7 @@ public class LatiBot {
 
         jdaInst.updateCommands().addCommands(cmds).queue();
 
-        ApiDriver.init();
+        //ApiDriver.init();
 
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
         audioPlayer = audioPlayerManager.createPlayer();

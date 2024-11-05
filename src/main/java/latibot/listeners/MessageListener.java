@@ -1,10 +1,14 @@
 package latibot.listeners;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import latibot.LatiBot;
 import latibot.chat.ApiDriver;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -13,10 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,20 +30,23 @@ public class MessageListener extends ListenerAdapter {
     // can't seem to figure out how to suggest any changes to it that wont
     // also break it, but honestly i dont really blame it
     private static final Pattern urlRegex = Pattern.compile(
-            "(\\|\\|.*?(?=.*\\|\\|))?" +
-                    "(?<fullLink>https?://(www\\.)?" +
-                    "(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\." +
-                    "[a-zA-Z0-9()]{1,6})\\b" +
-                    "([-a-zA-Z0-9()@:%_+.~#&/=]*))" +
-                    "(.*?\\|\\|(?<=\\|\\|))?");
+            "(?<before>.*)(?<fullLink>https?://(www\\.)?(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#&/=]+)(?<after>.*)");
     private static final HashMap<String, String> domains = new HashMap<>();
 
     public static HashMap<String, String> getDomains() {
         return domains;
     }
 
+    private static final HashMap<Long, String> webhookUrls = new HashMap<>();
+
+    public static void setWebhookUrls(HashMap<Long, String> webhookUrls) {
+        MessageListener.webhookUrls.putAll(webhookUrls);
+    }
+
+    /*
     private static List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
     private static final int answersTotalWeight;
+    */
 
     static {
         // ngl chatgpt suggested using streams for this and i really liked it
@@ -57,6 +61,7 @@ public class MessageListener extends ListenerAdapter {
         }
 
         // Loading Yes/No Answers
+        /*
         try (Stream<String> answers = Files.lines(Path.of("YesNoAnswers.txt"))) {
             answers.map(line -> line.split("\\|"))
                     .forEach(parts -> yesNoAnswers.add(new YesNoAnswer(Integer.parseInt(parts[0]), parts[1])));
@@ -65,12 +70,13 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.error("Error reading YesNoAnswers.txt", e);
             throw new RuntimeException(e);
         }
+        */
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        User author = event.getAuthor();
-        if (author.isBot()) return; // must be a user message
+        if (event.getAuthor().isBot()) return; // must be a user message
+        Member member = event.getMember();
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
@@ -81,10 +87,8 @@ public class MessageListener extends ListenerAdapter {
         }
 
         //FIXME RIGGBOT GAURDRAIL
-        //if (!content.toLowerCase().contains("riggbot")) return;
+        if (!content.toLowerCase().contains("riggbot")) return;
         //FIXME RIGGBOT GAURDRAIL
-
-        // WebhookClient client = WebhookClient.createClient(null, content, content)
 
         // Link detection and url replacement
         Matcher matcher = urlRegex.matcher(content);
@@ -93,16 +97,24 @@ public class MessageListener extends ListenerAdapter {
             String domain = matcher.group("domain");
             String replacement = domains.get(domain);
             if (replacement != null) {
-                boolean isSpoiler = matcher.group().startsWith("||") && matcher.group().endsWith("||");
-                reply.append(isSpoiler ? "||" : "")
+                reply.append(matcher.group("before"))
+                        .append("<").append(matcher.group("fullLink")).append("> [embed](")
                         .append(matcher.group("fullLink").replace(domain, replacement))
-                        .append(isSpoiler ? " ||" : "")
-                        .append("\n");
+                        .append(")").append(matcher.group("after"));
             }
         }
         if (!reply.isEmpty()) {
-            message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).complete();
-            message.suppressEmbeds(true).queue();
+            try (WebhookClient client = WebhookClient.withUrl(webhookUrls.get(message.getChannel().getIdLong()))) {
+                WebhookMessageBuilder messageBuilder = new WebhookMessageBuilder()
+                        .setUsername(member.getEffectiveName())
+                        .setAvatarUrl(member.getEffectiveAvatarUrl())
+                        .setContent(reply.toString());
+                client.send(messageBuilder.build());
+                //message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).complete();
+                //message.suppressEmbeds(true).queue();
+            } catch (Exception e){
+                LatiBot.LOG.error("Exception occurred during sending webhook message", e);
+            }
         }
 
         // respond!
@@ -139,6 +151,7 @@ public class MessageListener extends ListenerAdapter {
         }
     }
 
+    /*
     private String getRandomYesNoAnswer() {
         int rand = (int) Math.ceil(Math.random() * answersTotalWeight) + 1; // >:) 
         Collections.shuffle(yesNoAnswers); // lol
@@ -154,4 +167,5 @@ public class MessageListener extends ListenerAdapter {
 
     private record YesNoAnswer(int weight, String answer) {
     }
+    */
 }
