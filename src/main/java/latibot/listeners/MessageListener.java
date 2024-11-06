@@ -1,13 +1,13 @@
 package latibot.listeners;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import latibot.LatiBot;
 import latibot.chat.ApiDriver;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.IncomingWebhookClient;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.WebhookClient;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -29,7 +29,7 @@ public class MessageListener extends ListenerAdapter {
     // can't seem to figure out how to suggest any changes to it that wont
     // also break it, but honestly i dont really blame it
     private static final Pattern urlRegex = Pattern.compile(
-            "(?<before>.*)(?<fullLink>https?://(www\\.)?(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#&/=]+)(?<after>.*)");
+            "(?<before>.*)(?<fullLink>https?://(www\\.)?(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#&/=]+)[-a-zA-Z0-9()@:%_+.~#&?/=]*(?<after>.*)");
     private static final HashMap<String, String> domains = new HashMap<>();
 
     public static HashMap<String, String> getDomains() {
@@ -40,6 +40,7 @@ public class MessageListener extends ListenerAdapter {
 
     public static void setWebhookUrls(HashMap<Long, String> webhookUrls) {
         MessageListener.webhookUrls.putAll(webhookUrls);
+        LatiBot.LOG.info("{} Webhooks registered", webhookUrls.size());
     }
 
     /*
@@ -71,6 +72,13 @@ public class MessageListener extends ListenerAdapter {
         }
         */
     }
+
+    private static JDA jda;
+
+    public static void setJda(JDA jda) {
+        MessageListener.jda = jda;
+    }
+
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -111,26 +119,37 @@ public class MessageListener extends ListenerAdapter {
             String replacement = domains.get(domain);
             if (replacement != null) {
                 reply.append(matcher.group("before"))
-                        .append("<").append(matcher.group("fullLink")).append("> [embed](")
+                        .append("<").append(matcher.group("fullLink")).append("> [emb](")
                         .append(matcher.group("fullLink").replace(domain, replacement))
                         .append(")").append(matcher.group("after"));
             }
         }
         if (!reply.isEmpty()) {
-            try (WebhookClient client = WebhookClient.withUrl(webhookUrls.get(message.getChannel().getIdLong()))) {
+            IncomingWebhookClient client = WebhookClient.createClient(jda, webhookUrls.get(message.getChannelIdLong()));
+            client.sendMessage(reply.toString())
+                    .setUsername(member.getEffectiveName())
+                    .setAvatarUrl(member.getEffectiveAvatarUrl())
+                    .setSuppressedNotifications(true)
+                    .queue();
+            message.delete().queue();
+            /*
+            try (WebhookClient client = WebhookClient.withUrl(webhookUrls.get(message.getChannelIdLong())) {
                 WebhookMessageBuilder messageBuilder = new WebhookMessageBuilder()
                         .setUsername(member.getEffectiveName())
                         .setAvatarUrl(member.getEffectiveAvatarUrl())
                         .setContent(reply.toString());
                 client.send(messageBuilder.build());
-                //message.delete().queue();
+                WebhookMessage webhookMessage = WebhookMessageBuilder.fromJDA();
+                //
                 message.suppressEmbeds(true).queue();
             } catch (Exception e) {
                 LatiBot.LOG.error("Exception occurred during sending webhook message", e);
             }
+            */
         }
 
         // respond!
+        /*
         String keywordRegex = "^(hey\\s)?lati(bot)?,?";
         if (content.toLowerCase().matches(keywordRegex + ".+")) {
 
@@ -146,6 +165,7 @@ public class MessageListener extends ListenerAdapter {
 
             // }
         }
+        */
     }
 
     public static boolean saveUrlReplacements() {
