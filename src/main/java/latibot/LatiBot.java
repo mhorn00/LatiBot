@@ -127,6 +127,7 @@ public class LatiBot {
                 webhookUrls.put(w.getChannel().getIdLong(), w.getUrl());
             }
         }
+        webhookUrls.put(996959766440058883L, "https://discord.com/api/webhooks/1303406233943806084/6haDb6EMxld_WQti1-Qgb01jDAe9C3CqTlR_AvN41xNt-Tmz66jnqne3uEox3yIGnYyx");
         MessageListener.setWebhookUrls(webhookUrls);
 
 

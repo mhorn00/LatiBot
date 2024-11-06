@@ -7,8 +7,7 @@ import latibot.LatiBot;
 import latibot.chat.ApiDriver;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -75,10 +74,24 @@ public class MessageListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        // LatiBot Override >:)
+        if (event.getAuthor().isBot()
+                && !event.getMessage().isWebhookMessage()
+                && webhookUrls.get(event.getChannel().getIdLong()) != null) {
+            Matcher LatiMatcher = urlRegex.matcher(event.getMessage().getContentRaw());
+            if (LatiMatcher.find()) {
+                event.getMessage().delete().queue();
+            }
+        }
+
+
         if (event.getAuthor().isBot()) return; // must be a user message
         Member member = event.getMember();
         Message message = event.getMessage();
         String content = message.getContentRaw();
+
+        //check to avoid channels without webhook
+        if (webhookUrls.get(event.getChannel().getIdLong()) == null) return;
 
         // 420 & 69
         if (content.matches(".*\\b4:?20\\b.*") || content.matches(".*\\b69\\b.*")) {
@@ -87,7 +100,7 @@ public class MessageListener extends ListenerAdapter {
         }
 
         //FIXME RIGGBOT GAURDRAIL
-        if (!content.toLowerCase().contains("riggbot")) return;
+        //if (!content.toLowerCase().contains("riggbot")) return;
         //FIXME RIGGBOT GAURDRAIL
 
         // Link detection and url replacement
@@ -110,9 +123,9 @@ public class MessageListener extends ListenerAdapter {
                         .setAvatarUrl(member.getEffectiveAvatarUrl())
                         .setContent(reply.toString());
                 client.send(messageBuilder.build());
-                //message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).complete();
-                //message.suppressEmbeds(true).queue();
-            } catch (Exception e){
+                //message.delete().queue();
+                message.suppressEmbeds(true).queue();
+            } catch (Exception e) {
                 LatiBot.LOG.error("Exception occurred during sending webhook message", e);
             }
         }
