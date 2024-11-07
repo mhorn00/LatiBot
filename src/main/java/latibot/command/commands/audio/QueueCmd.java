@@ -1,4 +1,4 @@
-package latibot.command.comands.audio;
+package latibot.command.commands.audio;
 
 import java.util.concurrent.TimeUnit;
 

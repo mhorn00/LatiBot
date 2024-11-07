@@ -1,4 +1,4 @@
-package latibot.command.comands.audio;
+package latibot.command.commands.audio;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,10 +10,10 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 
-public class ShuffleCmd extends BaseCommand {
+public class PauseCmd extends BaseCommand {
 
-    public ShuffleCmd() {
-        super("shuffle", "Shuffles the current queue.");
+    public PauseCmd() {
+        super("pause", "Pauses the current song.");
     }
 
     @Override
@@ -21,13 +21,17 @@ public class ShuffleCmd extends BaseCommand {
         if (LatiBot.tm == null) {
             e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-        } else if (LatiBot.tm.getQueue().isQueueEmpty()) {
-            e.reply("the queue is currently empty").setSuppressedNotifications(true)
+        } else if (LatiBot.tm.getQueue().getCurrent() == null) {
+            e.reply("there isn't anything playing").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
         } else {
-            e.reply("ok queue shuffled").setSuppressedNotifications(true)
-                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-            LatiBot.tm.shuffleQueue();
+            if (LatiBot.tm.togglePause()) {
+                e.reply("ok paused").setSuppressedNotifications(true)
+                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            } else {
+                e.reply("ok unpaused").setSuppressedNotifications(true)
+                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            }
         }
     }
 

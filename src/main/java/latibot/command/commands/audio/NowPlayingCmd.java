@@ -1,4 +1,4 @@
-package latibot.command.comands.audio;
+package latibot.command.commands.audio;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,10 +10,10 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 
-public class ClearCmd extends BaseCommand {
+public class NowPlayingCmd extends BaseCommand {
 
-    public ClearCmd() {
-        super("clear", "Clears the queue.");
+    public NowPlayingCmd() {
+        super("nowplaying", "Displays the currnetly playing track.");
     }
 
     @Override
@@ -21,13 +21,14 @@ public class ClearCmd extends BaseCommand {
         if (LatiBot.tm == null) {
             e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-        } else if (LatiBot.tm.getQueue().isQueueEmpty()) {
-            e.reply("the queue is already empty!").setSuppressedNotifications(true)
+        } else if (LatiBot.tm.getQueue().getCurrent() == null) {
+            e.reply("there isn't anything playing").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
         } else {
-            e.reply("queue cleared!").setSuppressedNotifications(true)
+            e.reply("now playing: " + LatiBot.tm.getQueue().getCurrent().getAudioTrack().getInfo().title
+                    + " - Queued by " + LatiBot.tm.getQueue().getCurrent().getMember().getEffectiveName())
+                    .setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-            LatiBot.tm.clearQueue();
         }
     }
 

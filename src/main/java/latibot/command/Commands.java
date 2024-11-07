@@ -1,27 +1,27 @@
 package latibot.command;
 
-import latibot.command.comands.audio.ClearCmd;
-import latibot.command.comands.audio.NowPlayingCmd;
-import latibot.command.comands.audio.PauseCmd;
-import latibot.command.comands.audio.PlayCmd;
-import latibot.command.comands.audio.QueueCmd;
-import latibot.command.comands.audio.RepeatCmd;
-import latibot.command.comands.audio.ShuffleCmd;
-import latibot.command.comands.audio.SkipCmd;
-import latibot.command.comands.audio.SpeakCmd;
-import latibot.command.comands.bot.JoinVoiceCmd;
-import latibot.command.comands.bot.LeaveVoiceCmd;
-import latibot.command.comands.bot.PingCmd;
-import latibot.command.comands.bot.SayCmd;
-import latibot.command.comands.bot.ShutdownCmd;
-import latibot.command.comands.chat.ChatTestCmd;
-import latibot.command.comands.misc.EmoteStatsCmd;
-import latibot.command.comands.misc.GetEmotesCmd;
-import latibot.command.comands.misc.ReplaceUrlCmd;
-import latibot.command.comands.misc.StatusCmd;
-import latibot.command.comands.misc.ToggleReplaceCmd;
-import latibot.command.comands.user.NicknameCmd;
-import latibot.command.comands.user.NicknamesCmd;
+import latibot.command.commands.audio.ClearCmd;
+import latibot.command.commands.audio.NowPlayingCmd;
+import latibot.command.commands.audio.PauseCmd;
+import latibot.command.commands.audio.PlayCmd;
+import latibot.command.commands.audio.QueueCmd;
+import latibot.command.commands.audio.RepeatCmd;
+import latibot.command.commands.audio.ShuffleCmd;
+import latibot.command.commands.audio.SkipCmd;
+import latibot.command.commands.audio.SpeakCmd;
+import latibot.command.commands.bot.JoinVoiceCmd;
+import latibot.command.commands.bot.LeaveVoiceCmd;
+import latibot.command.commands.bot.PingCmd;
+import latibot.command.commands.bot.SayCmd;
+import latibot.command.commands.bot.ShutdownCmd;
+import latibot.command.commands.chat.ChatTestCmd;
+import latibot.command.commands.misc.EmoteStatsCmd;
+import latibot.command.commands.misc.GetEmotesCmd;
+import latibot.command.commands.misc.ReplaceUrlCmd;
+import latibot.command.commands.misc.StatusCmd;
+import latibot.command.commands.misc.ToggleReplaceCmd;
+import latibot.command.commands.user.NicknameCmd;
+import latibot.command.commands.user.NicknamesCmd;
 
 public class Commands {
 

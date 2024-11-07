@@ -1,4 +1,4 @@
-package latibot.command.comands.user;
+package latibot.command.commands.user;
 
 import java.text.SimpleDateFormat;
 
