@@ -1,11 +1,11 @@
 package latibot.listeners;
 
-import io.github.sashirestela.openai.domain.chat.Chat;
 import latibot.LatiBot;
-import latibot.chat.ApiDriver;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.io.BufferedWriter;
@@ -13,11 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -29,20 +25,17 @@ public class MessageListener extends ListenerAdapter {
     // can't seem to figure out how to suggest any changes to it that wont
     // also break it, but honestly i dont really blame it
     private static final Pattern urlRegex = Pattern.compile(
-            "(\\|\\|.*?(?=.*\\|\\|))?" +
-                    "(?<fullLink>https?://(www\\.)?" +
-                    "(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\." +
-                    "[a-zA-Z0-9()]{1,6})\\b" +
-                    "([-a-zA-Z0-9()@:%_+.~#&/=]*))" +
-                    "(.*?\\|\\|(?<=\\|\\|))?");
+            "(?<before>.*)(?<fullLink>https?://(www\\.)?(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#&/=]+)[-a-zA-Z0-9()@:%_+.~#&?/=]*(?<after>.*)");
     private static final HashMap<String, String> domains = new HashMap<>();
 
     public static HashMap<String, String> getDomains() {
         return domains;
     }
 
+    /*
     private static List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
     private static final int answersTotalWeight;
+    */
 
     static {
         // ngl chatgpt suggested using streams for this and i really liked it
@@ -57,6 +50,7 @@ public class MessageListener extends ListenerAdapter {
         }
 
         // Loading Yes/No Answers
+        /*
         try (Stream<String> answers = Files.lines(Path.of("YesNoAnswers.txt"))) {
             answers.map(line -> line.split("\\|"))
                     .forEach(parts -> yesNoAnswers.add(new YesNoAnswer(Integer.parseInt(parts[0]), parts[1])));
@@ -65,12 +59,16 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.error("Error reading YesNoAnswers.txt", e);
             throw new RuntimeException(e);
         }
+        */
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        User author = event.getAuthor();
-        if (author.isBot()) return; // must be a user message
+        // LatiBot Override >:)
+        //if (event.getAuthor().getIdLong() == 180127136240238592L && urlRegex.matcher(event.getMessage().getContentRaw()).find()) event.getMessage().delete().queue();
+
+        if (event.getAuthor().isBot()) return; // must be a user message
+        Member member = event.getMember();
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
@@ -84,8 +82,6 @@ public class MessageListener extends ListenerAdapter {
         //if (!content.toLowerCase().contains("riggbot")) return;
         //FIXME RIGGBOT GAURDRAIL
 
-        // WebhookClient client = WebhookClient.createClient(null, content, content)
-
         // Link detection and url replacement
         Matcher matcher = urlRegex.matcher(content);
         StringBuilder reply = new StringBuilder();
@@ -93,19 +89,38 @@ public class MessageListener extends ListenerAdapter {
             String domain = matcher.group("domain");
             String replacement = domains.get(domain);
             if (replacement != null) {
-                boolean isSpoiler = matcher.group().startsWith("||") && matcher.group().endsWith("||");
-                reply.append(isSpoiler ? "||" : "")
+                reply.append(matcher.group("before"))
+                        .append("<").append(matcher.group("fullLink")).append("> [emb](")
                         .append(matcher.group("fullLink").replace(domain, replacement))
-                        .append(isSpoiler ? " ||" : "")
-                        .append("\n");
+                        .append(")").append(matcher.group("after"));
             }
         }
         if (!reply.isEmpty()) {
-            message.reply(reply).setSuppressedNotifications(true).mentionRepliedUser(false).complete();
-            message.suppressEmbeds(true).queue();
+            try {
+                Webhook webhook = message.getChannel().asTextChannel().createWebhook("Riggbot Url Replacer").complete();
+                webhook.sendMessage(reply.toString())
+                        .setUsername(member.getEffectiveName())
+                        .setAvatarUrl(member.getEffectiveAvatarUrl())
+                        .setSuppressedNotifications(true)
+                        .queue();
+
+                message.delete().queue();
+                webhook.delete().queue();                
+
+                // LatiBot Override
+                message.getChannel().getHistoryAround(message, 3).complete()
+                        .getRetrievedHistory()
+                        .stream().filter(m -> m.getAuthor().getIdLong() == 180127136240238592L
+                                && urlRegex.matcher(m.getContentRaw()).find())
+                        .forEach(l -> l.delete().queue());
+            } catch (PermissionException pe) {
+                LatiBot.LOG.info("Missing MANAGE_WEBHOOKS permission in channel: {}", message.getChannel());
+                message.getChannel().sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)").queue();
+            }
         }
 
         // respond!
+        /*
         String keywordRegex = "^(hey\\s)?lati(bot)?,?";
         if (content.toLowerCase().matches(keywordRegex + ".+")) {
 
@@ -121,6 +136,7 @@ public class MessageListener extends ListenerAdapter {
 
             // }
         }
+        */
     }
 
     public static boolean saveUrlReplacements() {
@@ -139,6 +155,7 @@ public class MessageListener extends ListenerAdapter {
         }
     }
 
+    /*
     private String getRandomYesNoAnswer() {
         int rand = (int) Math.ceil(Math.random() * answersTotalWeight) + 1; // >:) 
         Collections.shuffle(yesNoAnswers); // lol
@@ -154,4 +171,5 @@ public class MessageListener extends ListenerAdapter {
 
     private record YesNoAnswer(int weight, String answer) {
     }
+    */
 }
