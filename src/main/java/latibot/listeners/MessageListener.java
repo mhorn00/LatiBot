@@ -5,7 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -32,6 +34,8 @@ public class MessageListener extends ListenerAdapter {
         return domains;
     }
 
+    public static List<Long> userBlacklist = new ArrayList<>();
+
     static {
         // Loading URL Replacements
         try (Stream<String> urlReplacements = Files.lines(Path.of("UrlReplacements.txt"))) {
@@ -55,6 +59,9 @@ public class MessageListener extends ListenerAdapter {
             event.getChannel().sendMessage("nice").setSuppressedNotifications(true).queue();
             return;
         }
+
+        // check blacklist
+        if (userBlacklist.contains(member.getIdLong())) return;
 
         // Link detection and url replacement
         Matcher matcher = urlRegex.matcher(content);

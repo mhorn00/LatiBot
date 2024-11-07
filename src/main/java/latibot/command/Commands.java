@@ -19,6 +19,7 @@ import latibot.command.comands.misc.EmoteStatsCmd;
 import latibot.command.comands.misc.GetEmotesCmd;
 import latibot.command.comands.misc.ReplaceUrlCmd;
 import latibot.command.comands.misc.StatusCmd;
+import latibot.command.comands.misc.ToggleReplaceCmd;
 import latibot.command.comands.user.NicknameCmd;
 import latibot.command.comands.user.NicknamesCmd;
 
@@ -43,6 +44,7 @@ public class Commands {
     public static final GetEmotesCmd GET_EMOTES = COMMANDS.registerCommand(new GetEmotesCmd());
     public static final ReplaceUrlCmd REPLACE_URL = COMMANDS.registerCommand(new ReplaceUrlCmd());
     public static final StatusCmd STATUS = COMMANDS.registerCommand(new StatusCmd());
+    public static final ToggleReplaceCmd TOGGLE_REPLACE = COMMANDS.registerCommand(new ToggleReplaceCmd());
     
     //audio cmds
     public static final ClearCmd CLEAR = COMMANDS.registerCommand(new ClearCmd());
