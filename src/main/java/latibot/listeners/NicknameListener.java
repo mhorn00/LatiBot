@@ -118,7 +118,7 @@ public class NicknameListener extends ListenerAdapter {
 			byte[] encode = md.digest((oldNickname + newNickname + id).getBytes(StandardCharsets.UTF_8));
 			return IntStream.range(0, encode.length).mapToObj(i -> String.format("%02x", encode[i] & 0xff)).collect(Collectors.joining()).substring(0, encode.length >= 95 ? 95 : encode.length);
 		} catch (NoSuchAlgorithmException e) {
-			LatiBot.LOG.error("Error hashing name change! Using fallback, errors may occure!", e);
+			LatiBot.LOG.error("Error hashing name change! Using fallback, errors may occur!", e);
 			// backup "hash"
 			String backup = oldNickname + newNickname + id;
 			return backup.substring(0, backup.length() >= 95 ? 95 : backup.length());

@@ -1,4 +1,4 @@
-package latibot.command.comands.audio;
+package latibot.command.commands.audio;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,10 +10,10 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 
-public class RepeatCmd extends BaseCommand {
+public class SkipCmd extends BaseCommand {
 
-    public RepeatCmd() {
-        super("repeat", "Repeats the current song.");
+    public SkipCmd() {
+        super("skip", "Skips to the next song in the queue.");
     }
 
     @Override
@@ -22,17 +22,12 @@ public class RepeatCmd extends BaseCommand {
             e.reply("i'm not currently in a voice channel").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
         } else if (LatiBot.tm.getQueue().getCurrent() == null) {
-            e.reply("there's no song currently playing").setSuppressedNotifications(true)
+            e.reply("there isn't anything playing").setSuppressedNotifications(true)
                     .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
         } else {
-            if (LatiBot.tm.toggleRepeat()) {
-                e.reply("ok repeating track " + LatiBot.tm.getQueue().getCurrent().getAudioTrack().getInfo().title)
-                        .setSuppressedNotifications(true)
-                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-            } else {
-                e.reply("ok turned off repeat").setSuppressedNotifications(true)
-                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-            }
+            e.reply("skipping...").setSuppressedNotifications(true)
+                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            LatiBot.tm.skip();
         }
     }
 

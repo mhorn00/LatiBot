@@ -1,4 +1,4 @@
-package latibot.command.comands.misc;
+package latibot.command.commands.misc;
 
 import latibot.command.BaseCommand;
 import latibot.listeners.MessageListener;

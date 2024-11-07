@@ -36,7 +36,7 @@ public class MidnightManager {
         Duration duration = Duration.between(now, nextMidnight);
         long initialDelay = duration.getSeconds();
 
-        LatiBot.LOG.info("Scheduling next midnight task in " + duration.toHours() + " hours and " + duration.toMinutesPart() + " minuets from now");
+        LatiBot.LOG.info("Scheduling next midnight task in " + duration.toHours() + " hours and " + duration.toMinutesPart() + " minutes from now");
 
         scheduler.schedule(midnightTask, initialDelay, TimeUnit.SECONDS);
     }

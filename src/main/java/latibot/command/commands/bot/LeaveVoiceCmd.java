@@ -1,4 +1,4 @@
-package latibot.command.comands.bot;
+package latibot.command.commands.bot;
 
 import java.util.concurrent.TimeUnit;
 

@@ -1,4 +1,4 @@
-package latibot.command.comands.chat;
+package latibot.command.commands.chat;
 
 import java.io.File;
 import java.io.IOException;

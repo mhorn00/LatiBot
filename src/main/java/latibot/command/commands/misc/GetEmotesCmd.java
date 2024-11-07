@@ -1,4 +1,4 @@
-package latibot.command.comands.misc;
+package latibot.command.commands.misc;
 
 import java.io.File;
 import java.io.IOException;
