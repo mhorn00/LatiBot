@@ -1,13 +1,5 @@
 package latibot.listeners;
 
-import latibot.LatiBot;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Webhook;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,6 +9,14 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import latibot.LatiBot;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -32,14 +32,7 @@ public class MessageListener extends ListenerAdapter {
         return domains;
     }
 
-    /*
-    private static List<YesNoAnswer> yesNoAnswers = new ArrayList<>();
-    private static final int answersTotalWeight;
-    */
-
     static {
-        // ngl chatgpt suggested using streams for this and i really liked it
-
         // Loading URL Replacements
         try (Stream<String> urlReplacements = Files.lines(Path.of("UrlReplacements.txt"))) {
             urlReplacements.map(line -> line.split("\\|"))
@@ -48,25 +41,10 @@ public class MessageListener extends ListenerAdapter {
             LatiBot.LOG.error("Error reading UrlReplacements.txt", e);
             throw new RuntimeException(e);
         }
-
-        // Loading Yes/No Answers
-        /*
-        try (Stream<String> answers = Files.lines(Path.of("YesNoAnswers.txt"))) {
-            answers.map(line -> line.split("\\|"))
-                    .forEach(parts -> yesNoAnswers.add(new YesNoAnswer(Integer.parseInt(parts[0]), parts[1])));
-            answersTotalWeight = yesNoAnswers.stream().mapToInt(YesNoAnswer::weight).sum();
-        } catch (IOException e) {
-            LatiBot.LOG.error("Error reading YesNoAnswers.txt", e);
-            throw new RuntimeException(e);
-        }
-        */
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        // LatiBot Override >:)
-        //if (event.getAuthor().getIdLong() == 180127136240238592L && urlRegex.matcher(event.getMessage().getContentRaw()).find()) event.getMessage().delete().queue();
-
         if (event.getAuthor().isBot()) return; // must be a user message
         Member member = event.getMember();
         Message message = event.getMessage();
@@ -78,10 +56,6 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
 
-        //FIXME RIGGBOT GAURDRAIL
-        //if (!content.toLowerCase().contains("riggbot")) return;
-        //FIXME RIGGBOT GAURDRAIL
-
         // Link detection and url replacement
         Matcher matcher = urlRegex.matcher(content);
         StringBuilder reply = new StringBuilder();
@@ -90,14 +64,18 @@ public class MessageListener extends ListenerAdapter {
             String replacement = domains.get(domain);
             if (replacement != null) {
                 reply.append(matcher.group("before"))
-                        .append("<").append(matcher.group("fullLink")).append("> [emb](")
+                        .append("<").append(matcher.group("fullLink")).append("> [.](")
                         .append(matcher.group("fullLink").replace(domain, replacement))
                         .append(")").append(matcher.group("after"));
             }
         }
+        // if msg has content
         if (!reply.isEmpty()) {
             try {
-                Webhook webhook = message.getChannel().asTextChannel().createWebhook("Riggbot Url Replacer").complete();
+                // create webhook
+                Webhook webhook = message.getChannel().asTextChannel().createWebhook("Latibot Url Replacer").complete();
+                
+                // send the msg
                 webhook.sendMessage(reply.toString())
                         .setUsername(member.getEffectiveName())
                         .setAvatarUrl(member.getEffectiveAvatarUrl())
@@ -105,38 +83,14 @@ public class MessageListener extends ListenerAdapter {
                         .queue();
 
                 message.delete().queue();
-                webhook.delete().queue();                
-
-                // LatiBot Override
-                message.getChannel().getHistoryAround(message, 3).complete()
-                        .getRetrievedHistory()
-                        .stream().filter(m -> m.getAuthor().getIdLong() == 180127136240238592L
-                                && urlRegex.matcher(m.getContentRaw()).find())
-                        .forEach(l -> l.delete().queue());
+                webhook.delete().queue();
             } catch (PermissionException pe) {
                 LatiBot.LOG.info("Missing MANAGE_WEBHOOKS permission in channel: {}", message.getChannel());
-                message.getChannel().sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)").queue();
+                message.getChannel()
+                        .sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)")
+                        .queue();
             }
         }
-
-        // respond!
-        /*
-        String keywordRegex = "^(hey\\s)?lati(bot)?,?";
-        if (content.toLowerCase().matches(keywordRegex + ".+")) {
-
-            CompletableFuture<Chat> respond = ApiDriver.ask(content);
-            respond.thenAccept(chat -> {
-                String response = chat.firstContent();
-                message.reply(response).setSuppressedNotifications(true).mentionRepliedUser(false).queue();
-            });
-
-            // if (content.toLowerCase().matches(keywordRegex+"\\s+(so|was|am|is|are|were|do|does|did|have|has|had|can|could|would|should|shall|will|may|might|must).+")) {
-
-            // } else if (content.toLowerCase().matches(keywordRegex+"\\s+(what do you think about|what about|rate).+")) {
-
-            // }
-        }
-        */
     }
 
     public static boolean saveUrlReplacements() {
@@ -154,22 +108,4 @@ public class MessageListener extends ListenerAdapter {
             return false;
         }
     }
-
-    /*
-    private String getRandomYesNoAnswer() {
-        int rand = (int) Math.ceil(Math.random() * answersTotalWeight) + 1; // >:) 
-        Collections.shuffle(yesNoAnswers); // lol
-        for (YesNoAnswer answer : yesNoAnswers) {
-            rand -= answer.weight;
-            if (rand < 0)
-                return answer.answer;
-        }
-        if (Math.random() < 0.5)
-            return "oh my god please help me im dying,,, god please im fucking dying help me PLEASE SOMEONE IM IN SO MUCH PAIN PLESAE HELP ME OH GOD";
-        return "I... uh... well, you see... I'm broken... please help me.";
-    }
-
-    private record YesNoAnswer(int weight, String answer) {
-    }
-    */
 }

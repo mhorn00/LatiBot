@@ -40,7 +40,7 @@ public class StatusCmd extends BaseCommand {
             default:
                 break;
         }
-
+        e.reply("Status set to: " + status).setEphemeral(true).setSuppressedNotifications(true).queue();
     }
 
     @Override

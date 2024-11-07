@@ -1,32 +1,37 @@
 package latibot;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+
 import latibot.audio.DecTalkWrapper;
 import latibot.audio.TrackManager;
 import latibot.command.Commands;
-import latibot.listeners.*;
+import latibot.listeners.ActionListener;
+import latibot.listeners.CommandListener;
+import latibot.listeners.MessageListener;
+import latibot.listeners.NicknameListener;
+import latibot.listeners.ReactionListener;
+import latibot.listeners.ReadyListener;
 import latibot.utils.MidnightManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Stream;
 
 /* TODO: General
  *  - Rewrite latibot in dart lol
@@ -60,7 +65,7 @@ public class LatiBot {
         jdaInst = JDABuilder
                 .createDefault(
                         new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
-                .setActivity(Activity.competing("a jorkin it contest"))
+                .setActivity(Activity.customStatus("midnight fiend"))
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT,
                         GatewayIntent.GUILD_MESSAGE_REACTIONS)
@@ -90,7 +95,7 @@ public class LatiBot {
                 Permission.MESSAGE_ADD_REACTION,
                 Permission.MESSAGE_ATTACH_FILES,
                 Permission.MESSAGE_EMBED_LINKS,
-                //Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
+                Permission.MESSAGE_ATTACH_VOICE_MESSAGE,
                 Permission.MESSAGE_HISTORY,
                 Permission.MANAGE_WEBHOOKS,
                 Permission.NICKNAME_CHANGE,
