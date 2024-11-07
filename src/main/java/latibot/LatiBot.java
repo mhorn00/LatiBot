@@ -101,7 +101,6 @@ public class LatiBot {
 
         boolean okFlag = true;
         Guild guild = jdaInst.getGuildById(142409638556467200L); //LATV
-        //Guild guild = jdaInst.getGuildById(968236034250924052L); //RiggBot Testing
         LOG.info("Checking permissions in guild " + guild.getName());
         for (Permission perm : perms) {
             if (!guild.getSelfMember().hasPermission(perm)) {
@@ -116,24 +115,6 @@ public class LatiBot {
             jdaInst.shutdown();
             System.exit(-3);
         }
-
-        // Loading webhooks
-        LatiBot.LOG.info("Retrieving WebHooks");
-        HashMap<Long, String> webhookUrls = new HashMap<>();
-        for (Guild g : jdaInst.getGuilds()) {
-            List<Webhook> webhooks = g.retrieveWebhooks().complete();
-            for (Webhook w : webhooks) {
-                if (w.getName().equals("Url Replacer")) {
-                    LatiBot.LOG.info("Url Replacer Webhook found in Channel: #{}", w.getChannel().getName());
-                    webhookUrls.put(w.getChannel().getIdLong(), w.getUrl());
-                }
-            }
-        }
-        // cum-zone
-        webhookUrls.put(996959766440058883L, "https://discord.com/api/webhooks/1303406233943806084/6haDb6EMxld_WQti1-Qgb01jDAe9C3CqTlR_AvN41xNt-Tmz66jnqne3uEox3yIGnYyx");
-        LatiBot.LOG.info("Url Replacer Webhook found in Channel: #cum-zone");
-        MessageListener.setWebhookUrls(webhookUrls);
-        MessageListener.setJda(jdaInst);
 
         List<SlashCommandData> cmds = Commands.COMMANDS.getCommands().values().stream().flatMap((v) -> {
             Stream.Builder<SlashCommandData> b = Stream.builder();

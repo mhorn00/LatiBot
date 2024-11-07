@@ -1,14 +1,11 @@
 package latibot.listeners;
 
-import io.github.sashirestela.openai.domain.chat.Chat;
 import latibot.LatiBot;
-import latibot.chat.ApiDriver;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.IncomingWebhookClient;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.WebhookClient;
+import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.io.BufferedWriter;
@@ -17,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -34,13 +30,6 @@ public class MessageListener extends ListenerAdapter {
 
     public static HashMap<String, String> getDomains() {
         return domains;
-    }
-
-    private static final HashMap<Long, String> webhookUrls = new HashMap<>();
-
-    public static void setWebhookUrls(HashMap<Long, String> webhookUrls) {
-        MessageListener.webhookUrls.putAll(webhookUrls);
-        LatiBot.LOG.info("{} Webhooks registered", webhookUrls.size());
     }
 
     /*
@@ -73,33 +62,15 @@ public class MessageListener extends ListenerAdapter {
         */
     }
 
-    private static JDA jda;
-
-    public static void setJda(JDA jda) {
-        MessageListener.jda = jda;
-    }
-
-
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         // LatiBot Override >:)
-        if (event.getAuthor().isBot()
-                && !event.getMessage().isWebhookMessage()
-                && webhookUrls.get(event.getChannel().getIdLong()) != null) {
-            Matcher LatiMatcher = urlRegex.matcher(event.getMessage().getContentRaw());
-            if (LatiMatcher.find()) {
-                event.getMessage().delete().queue();
-            }
-        }
-
+        //if (event.getAuthor().getIdLong() == 180127136240238592L && urlRegex.matcher(event.getMessage().getContentRaw()).find()) event.getMessage().delete().queue();
 
         if (event.getAuthor().isBot()) return; // must be a user message
         Member member = event.getMember();
         Message message = event.getMessage();
         String content = message.getContentRaw();
-
-        //check to avoid channels without webhook
-        if (webhookUrls.get(event.getChannel().getIdLong()) == null) return;
 
         // 420 & 69
         if (content.matches(".*\\b4:?20\\b.*") || content.matches(".*\\b69\\b.*")) {
@@ -125,27 +96,27 @@ public class MessageListener extends ListenerAdapter {
             }
         }
         if (!reply.isEmpty()) {
-            IncomingWebhookClient client = WebhookClient.createClient(jda, webhookUrls.get(message.getChannelIdLong()));
-            client.sendMessage(reply.toString())
-                    .setUsername(member.getEffectiveName())
-                    .setAvatarUrl(member.getEffectiveAvatarUrl())
-                    .setSuppressedNotifications(true)
-                    .queue();
-            message.delete().queue();
-            /*
-            try (WebhookClient client = WebhookClient.withUrl(webhookUrls.get(message.getChannelIdLong())) {
-                WebhookMessageBuilder messageBuilder = new WebhookMessageBuilder()
+            try {
+                Webhook webhook = message.getChannel().asTextChannel().createWebhook("Riggbot Url Replacer").complete();
+                webhook.sendMessage(reply.toString())
                         .setUsername(member.getEffectiveName())
                         .setAvatarUrl(member.getEffectiveAvatarUrl())
-                        .setContent(reply.toString());
-                client.send(messageBuilder.build());
-                WebhookMessage webhookMessage = WebhookMessageBuilder.fromJDA();
-                //
-                message.suppressEmbeds(true).queue();
-            } catch (Exception e) {
-                LatiBot.LOG.error("Exception occurred during sending webhook message", e);
+                        .setSuppressedNotifications(true)
+                        .queue();
+
+                message.delete().queue();
+                webhook.delete().queue();                
+
+                // LatiBot Override
+                message.getChannel().getHistoryAround(message, 3).complete()
+                        .getRetrievedHistory()
+                        .stream().filter(m -> m.getAuthor().getIdLong() == 180127136240238592L
+                                && urlRegex.matcher(m.getContentRaw()).find())
+                        .forEach(l -> l.delete().queue());
+            } catch (PermissionException pe) {
+                LatiBot.LOG.info("Missing MANAGE_WEBHOOKS permission in channel: {}", message.getChannel());
+                message.getChannel().sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)").queue();
             }
-            */
         }
 
         // respond!
