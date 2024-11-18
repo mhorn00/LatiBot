@@ -1,5 +1,13 @@
 package latibot.listeners;
 
+import latibot.LatiBot;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,14 +19,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import latibot.LatiBot;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Webhook;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -35,6 +35,8 @@ public class MessageListener extends ListenerAdapter {
     }
 
     public static List<Long> userBlacklist = new ArrayList<>();
+
+    public static boolean useWebhooks;
 
     static {
         // Loading URL Replacements
@@ -70,32 +72,42 @@ public class MessageListener extends ListenerAdapter {
             String domain = matcher.group("domain");
             String replacement = domains.get(domain);
             if (replacement != null) {
-                reply.append(matcher.group("before"))
-                        .append("<").append(matcher.group("fullLink")).append("> [.](")
-                        .append(matcher.group("fullLink").replace(domain, replacement))
-                        .append(")").append(matcher.group("after"));
+                if (useWebhooks) {
+                    reply.append(matcher.group("before"))
+                            .append("<").append(matcher.group("fullLink")).append("> [.](")
+                            .append(matcher.group("fullLink").replace(domain, replacement))
+                            .append(")").append(matcher.group("after"));
+                } else {
+                    reply.append(matcher.group("before"))
+                            .append(matcher.group("fullLink").replace(domain, replacement))
+                            .append(matcher.group("after"));
+                }
             }
         }
         // if msg has content
         if (!reply.isEmpty()) {
-            try {
-                // create webhook
-                Webhook webhook = message.getChannel().asTextChannel().createWebhook("Latibot Url Replacer").complete();
-                
-                // send the msg
-                webhook.sendMessage(reply.toString())
-                        .setUsername(member.getEffectiveName())
-                        .setAvatarUrl(member.getEffectiveAvatarUrl())
-                        .setSuppressedNotifications(true)
-                        .queue();
+            if (useWebhooks) {
+                try {
+                    // create webhook
+                    Webhook webhook = message.getChannel().asTextChannel().createWebhook("LatiBot Url Replacer").complete();
 
-                message.delete().queue();
-                webhook.delete().queue();
-            } catch (PermissionException pe) {
-                LatiBot.LOG.info("Missing MANAGE_WEBHOOKS permission in channel: {}", message.getChannel());
-                message.getChannel()
-                        .sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)")
-                        .queue();
+                    // send the msg
+                    webhook.sendMessage(reply.toString())
+                            .setUsername(member.getEffectiveName())
+                            .setAvatarUrl(member.getEffectiveAvatarUrl())
+                            .setSuppressedNotifications(true)
+                            .queue();
+                    message.delete().queue();
+                    webhook.delete().queue();
+                } catch (PermissionException pe) {
+                    LatiBot.LOG.info("Missing MANAGE_WEBHOOKS permission in channel: {}", message.getChannel());
+                    message.getChannel()
+                            .sendMessage("bro i tried but my mom said no (im missing the manage webhooks perm in here)")
+                            .queue();
+                }
+            } else {
+                message.reply(reply).setSuppressedNotifications(true).queue();
+                message.suppressEmbeds(true).queue();
             }
         }
     }
