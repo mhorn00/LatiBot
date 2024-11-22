@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 public class NicknamesCmd extends BaseCommand {
 
 	public NicknamesCmd() {
-		super("nickanmes", "Check the nickname history for a user.");
+		super("nicknames", "Check the nickname history for a user.");
 	}
 
 	@Override
