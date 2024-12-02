@@ -134,12 +134,14 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
         event.getJDA().getRateLimitPool().schedule(() -> {
-            if (msg.getEmbeds().size() < replaceCount) {
-                LatiBot.LOG.info("Embed failed with message: '{}', retrying...", msg.getContentRaw());
+            int c = -1;
+            Message m = null;
+            if ((c = (m = event.getChannel().retrieveMessageById(msg.getIdLong()).complete()).getEmbeds().size()) < replaceCount) {
+                LatiBot.LOG.info("Embed failed with message: '{}', expected {} embeds but got {}, retrying...", m.getContentRaw(), replaceCount, c);
                 ReplyInfo r = buildReplyString(content, index+1);
-                msg.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index+1, r.replaceCount));
+                m.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index+1, r.replaceCount));
             }    
-        }, 2, TimeUnit.SECONDS);
+        }, 5, TimeUnit.SECONDS);
     }
 
 
