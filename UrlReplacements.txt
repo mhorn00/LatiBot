@@ -1,4 +1,5 @@
-tiktok.com|tfxktok.com
+tiktok.com|tfxktok.com^vxtiktok.com
 instagram.com|ddinstagram.com
 x.com|stupidpenisx.com
 reddit.com|rxddit.com
+old.reddit.com|rxddit.com 

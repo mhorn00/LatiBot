@@ -1,5 +1,19 @@
 package latibot.listeners;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 import latibot.LatiBot;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -7,18 +21,6 @@ import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -28,21 +30,20 @@ public class MessageListener extends ListenerAdapter {
     // also break it, but honestly i dont really blame it
     private static final Pattern urlRegex = Pattern.compile(
             "(?<before>.*)(?<fullLink>https?://(www\\.)?(?<domain>[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6})\\b[-a-zA-Z0-9()@:%_+.~#&/=]+)[-a-zA-Z0-9()@:%_+.~#&?/=]*(?<after>.*)");
-    private static final HashMap<String, String> domains = new HashMap<>();
+    private static final HashMap<String, List<String>> domains = new HashMap<>();
 
-    public static HashMap<String, String> getDomains() {
-        return domains;
-    }
+    public static HashMap<String, List<String>> getDomains() { return domains; }
 
     public static List<Long> userBlacklist = new ArrayList<>();
 
     public static boolean useWebhooks;
 
     static {
-        // Loading URL Replacements
+        //> Loading URL Replacements
         try (Stream<String> urlReplacements = Files.lines(Path.of("UrlReplacements.txt"))) {
-            urlReplacements.map(line -> line.split("\\|"))
-                    .forEach(parts -> domains.put(parts[0], parts[1]));
+            urlReplacements.map(line -> line.split("\\|")).forEach(parts -> {
+                        domains.put(parts[0], Arrays.asList(parts[1].split("\\^")));
+                    });
         } catch (IOException e) {
             LatiBot.LOG.error("Error reading UrlReplacements.txt", e);
             throw new RuntimeException(e);
@@ -51,39 +52,24 @@ public class MessageListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return; // must be a user message
+        if (event.getAuthor().isBot()) return; //> must be a user message
         Member member = event.getMember();
         Message message = event.getMessage();
         String content = message.getContentRaw();
 
-        // 420 & 69
+        //> 420 & 69
         if (content.matches(".*\\b4:?20\\b.*") || content.matches(".*\\b69\\b.*")) {
             event.getChannel().sendMessage("nice").setSuppressedNotifications(true).queue();
             return;
         }
 
-        // check blacklist
+        //> check blacklist
         if (userBlacklist.contains(member.getIdLong())) return;
 
-        // Link detection and url replacement
-        Matcher matcher = urlRegex.matcher(content);
-        StringBuilder reply = new StringBuilder();
-        while (matcher.find()) {
-            String domain = matcher.group("domain");
-            String replacement = domains.get(domain);
-            if (replacement != null) {
-                if (useWebhooks) {
-                    reply.append(matcher.group("before"))
-                            .append("<").append(matcher.group("fullLink")).append("> [.](")
-                            .append(matcher.group("fullLink").replace(domain, replacement))
-                            .append(")").append(matcher.group("after"));
-                } else {
-                    reply.append(matcher.group("before"))
-                            .append(matcher.group("fullLink").replace(domain, replacement))
-                            .append(matcher.group("after"));
-                }
-            }
-        }
+        //> get the reply string using the main
+        ReplyInfo r = buildReplyString(content, 0);
+        String reply = r.content;
+
         // if msg has content
         if (!reply.isEmpty()) {
             if (useWebhooks) {
@@ -106,18 +92,64 @@ public class MessageListener extends ListenerAdapter {
                             .queue();
                 }
             } else {
-                message.reply(reply).setSuppressedNotifications(true).queue();
-                message.suppressEmbeds(true).queue();
+                //> supress the embed on the original then send a msg to replace the embed
+                //> yes this calls buildReplyString again, but consider: i dont care -MH
+                message.suppressEmbeds(true).queue(_v -> event.getChannel().sendMessage(reply).setSuppressedNotifications(true).setSuppressEmbeds(false).queue(m -> recurseCheckEmbed(m, event, content, 0, r.replaceCount)));
             }
         }
     }
+                
+    private record ReplyInfo(String content, int index, int replaceCount) {}
+
+    private ReplyInfo buildReplyString(String content, int index) {
+        Matcher matcher = urlRegex.matcher(content);
+        StringBuilder reply = new StringBuilder();
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+            String domain = matcher.group("domain");
+            List<String> replacements = domains.get(domain);
+            if (index < replacements.size() ) {
+                if (useWebhooks) {
+                    reply.append(matcher.group("before"))
+                            .append("<").append(matcher.group("fullLink")).append("> [.](")
+                            .append(matcher.group("fullLink").replace(domain, replacements.get(index) == null ? replacements.getLast() : replacements.get(index)))
+                            .append(")").append(matcher.group("after"));
+                } else {
+                    reply.append("[.](")
+                            .append(matcher.group("fullLink").replace(domain, replacements.get(index) == null ? replacements.getLast() : replacements.get(index)))
+                            .append(")");
+                }
+            } else {
+                reply.append("index '").append(index).append("' out of bounds in alt list for domain  '").append(domain).append("'");
+            }
+        }
+        return new ReplyInfo(reply.toString(), index, count);
+    }
+
+                
+    private void recurseCheckEmbed(final Message msg, final MessageReceivedEvent event, final String content, int index, int replaceCount) {
+        if (index > 10) {
+            LatiBot.LOG.info("Embed failed with message: '{}', too many retries!", msg.getContentRaw());
+            return;
+        }
+        event.getJDA().getRateLimitPool().schedule(() -> {
+            if (msg.getEmbeds().size() < replaceCount) {
+                LatiBot.LOG.info("Embed failed with message: '{}', retrying...", msg.getContentRaw());
+                ReplyInfo r = buildReplyString(content, index+1);
+                msg.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index+1, r.replaceCount));
+            }    
+        }, 2, TimeUnit.SECONDS);
+    }
+
+
 
     public static boolean saveUrlReplacements() {
         String filePath = "UrlReplacements.txt";
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String domain : domains.keySet()) {
-                writer.write(domain + "|" + domains.get(domain));
+                writer.write(domain + "|" + String.join("^", domains.get(domain)) );
                 writer.newLine();
             }
             LatiBot.LOG.info("Changes were saved to UrlReplacements.txt");

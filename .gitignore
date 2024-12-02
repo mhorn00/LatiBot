@@ -66,10 +66,12 @@ src/main/resources/token.txt
 # also dont include the openai key lol
 src/main/resources/openai_key.txt
 
-
 #tts wav directory
 tts
 
 #emote download directoy
 emotes
+
+#other
 /.idea/
+*.lnk

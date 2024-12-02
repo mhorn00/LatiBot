@@ -65,7 +65,7 @@ public class LatiBot {
         jdaInst = JDABuilder
                 .createDefault(
                         new String(LatiBot.class.getClassLoader().getResourceAsStream("token.txt").readAllBytes()))
-                .setActivity(Activity.customStatus("using the federalist papers as rolling papers"))
+                .setActivity(Activity.customStatus("you better watch out, you better watch out, you better watch out, you better watch out, you better watch out, you better watch o"))
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT,
                         GatewayIntent.GUILD_MESSAGE_REACTIONS)
