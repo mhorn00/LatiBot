@@ -15,11 +15,7 @@ import latibot.command.commands.bot.PingCmd;
 import latibot.command.commands.bot.SayCmd;
 import latibot.command.commands.bot.ShutdownCmd;
 import latibot.command.commands.chat.ChatTestCmd;
-import latibot.command.commands.misc.EmoteStatsCmd;
-import latibot.command.commands.misc.GetEmotesCmd;
-import latibot.command.commands.misc.ReplaceUrlCmd;
-import latibot.command.commands.misc.StatusCmd;
-import latibot.command.commands.misc.ToggleReplaceCmd;
+import latibot.command.commands.misc.*;
 import latibot.command.commands.user.NicknameCmd;
 import latibot.command.commands.user.NicknamesCmd;
 
@@ -45,6 +41,7 @@ public class Commands {
     public static final ReplaceUrlCmd REPLACE_URL = COMMANDS.registerCommand(new ReplaceUrlCmd());
     public static final StatusCmd STATUS = COMMANDS.registerCommand(new StatusCmd());
     public static final ToggleReplaceCmd TOGGLE_REPLACE = COMMANDS.registerCommand(new ToggleReplaceCmd());
+    public static final ToggleWebhooksCmd TOGGLE_WEBHOOKS = COMMANDS.registerCommand(new ToggleWebhooksCmd());
     
     //audio cmds
     public static final ClearCmd CLEAR = COMMANDS.registerCommand(new ClearCmd());
