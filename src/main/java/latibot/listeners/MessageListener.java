@@ -1,5 +1,13 @@
 package latibot.listeners;
 
+import latibot.LatiBot;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,14 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import latibot.LatiBot;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Webhook;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -42,8 +42,8 @@ public class MessageListener extends ListenerAdapter {
         //> Loading URL Replacements
         try (Stream<String> urlReplacements = Files.lines(Path.of("UrlReplacements.txt"))) {
             urlReplacements.map(line -> line.split("\\|")).forEach(parts -> {
-                        domains.put(parts[0], Arrays.asList(parts[1].split("\\^")));
-                    });
+                domains.put(parts[0], Arrays.asList(parts[1].split("\\^")));
+            });
         } catch (IOException e) {
             LatiBot.LOG.error("Error reading UrlReplacements.txt", e);
             throw new RuntimeException(e);
@@ -94,11 +94,13 @@ public class MessageListener extends ListenerAdapter {
             } else {
                 //> supress the embed on the original then send a msg to replace the embed
                 //> yes this calls buildReplyString again, but consider: i dont care -MH
-                message.suppressEmbeds(true).queue(_v -> event.getChannel().sendMessage(reply).setSuppressedNotifications(true).setSuppressEmbeds(false).queue(m -> recurseCheckEmbed(m, event, content, 0, r.replaceCount)));
+                message.suppressEmbeds(true).queue(
+                        _v -> event.getChannel().sendMessage(reply).setSuppressedNotifications(true).setSuppressEmbeds(false).queue(
+                                m -> recurseCheckEmbed(m, event, content, 0, r.replaceCount)));
             }
         }
     }
-                
+
     private record ReplyInfo(String content, int index, int replaceCount) {}
 
     private ReplyInfo buildReplyString(String content, int index) {
@@ -109,7 +111,7 @@ public class MessageListener extends ListenerAdapter {
             count++;
             String domain = matcher.group("domain");
             List<String> replacements = domains.get(domain);
-            if (index < replacements.size() ) {
+            if (index < replacements.size()) {
                 if (useWebhooks) {
                     reply.append(matcher.group("before"))
                             .append("<").append(matcher.group("fullLink")).append("> [.](")
@@ -119,6 +121,12 @@ public class MessageListener extends ListenerAdapter {
                     reply.append("[.](")
                             .append(matcher.group("fullLink").replace(domain, replacements.get(index) == null ? replacements.getLast() : replacements.get(index)))
                             .append(")");
+                    // Spoiler Check, odd number of markers before & after link required
+                    if (matcher.group("before").split("||").length % 2 == 0
+                            && matcher.group("after").split("||").length % 2 == 0) {
+                        reply.insert(0, "||").append("||");
+                    }
+                    reply.insert(0,"\uD83D\uDD17");
                 }
             } else {
                 reply.append("index '").append(index).append("' out of bounds in alt list for domain  '").append(domain).append("'");
@@ -127,7 +135,7 @@ public class MessageListener extends ListenerAdapter {
         return new ReplyInfo(reply.toString(), index, count);
     }
 
-                
+
     private void recurseCheckEmbed(final Message msg, final MessageReceivedEvent event, final String content, int index, int replaceCount) {
         if (index > 10) {
             LatiBot.LOG.info("Embed failed with message: '{}', too many retries!", msg.getContentRaw());
@@ -138,12 +146,11 @@ public class MessageListener extends ListenerAdapter {
             Message m = null;
             if ((c = (m = event.getChannel().retrieveMessageById(msg.getIdLong()).complete()).getEmbeds().size()) < replaceCount) {
                 LatiBot.LOG.info("Embed failed with message: '{}', expected {} embeds but got {}, retrying...", m.getContentRaw(), replaceCount, c);
-                ReplyInfo r = buildReplyString(content, index+1);
-                m.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index+1, r.replaceCount));
-            }    
+                ReplyInfo r = buildReplyString(content, index + 1);
+                m.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index + 1, r.replaceCount));
+            }
         }, 5, TimeUnit.SECONDS);
     }
-
 
 
     public static boolean saveUrlReplacements() {
@@ -151,7 +158,7 @@ public class MessageListener extends ListenerAdapter {
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String domain : domains.keySet()) {
-                writer.write(domain + "|" + String.join("^", domains.get(domain)) );
+                writer.write(domain + "|" + String.join("^", domains.get(domain)));
                 writer.newLine();
             }
             LatiBot.LOG.info("Changes were saved to UrlReplacements.txt");
