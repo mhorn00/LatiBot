@@ -8,6 +8,7 @@ import latibot.LatiBot;
 import latibot.command.BaseCommand;
 import latibot.listeners.MessageListener;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -49,8 +50,9 @@ public class ReplaceUrlCmd extends BaseCommand {
     private void handleAddSubcommand(SlashCommandInteractionEvent e) {
         String domain = e.getOption("domain").getAsString();
         String replacement = e.getOption("replacement").getAsString();
-        boolean asAlternate = e.getOption("as_alternate").getAsBoolean();
-        if (asAlternate) {
+        OptionMapping asAlternate = e.getOption("as_alternate");
+        boolean asAlternateBool = asAlternate == null ? false : asAlternate.getAsBoolean();
+        if (asAlternateBool) {
             //> Add the replacement as an alternate or create a new list with the replacement if it doesn't exist
             MessageListener.getDomains().put(domain, MessageListener.getDomains().compute(domain, (k, list) -> {
                 //> If the list is null or empty, create a new list with the replacement
@@ -76,7 +78,7 @@ public class ReplaceUrlCmd extends BaseCommand {
         }
 
         if (MessageListener.saveUrlReplacements()) {
-            if (asAlternate) {
+            if (asAlternateBool) {
                 e.reply("Added '" + replacement + "' as an alternate for '" + domain + "'").queue();
             } else {
                 e.reply("Urls with '" + domain + "' will now be replaced with '" + replacement + "'").queue();

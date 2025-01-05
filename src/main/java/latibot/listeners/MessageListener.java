@@ -68,6 +68,7 @@ public class MessageListener extends ListenerAdapter {
 
         //> get the reply string using the main
         ReplyInfo r = buildReplyString(content, 0);
+        if (r == null) return;
         String reply = r.content;
 
         // if msg has content
@@ -101,24 +102,26 @@ public class MessageListener extends ListenerAdapter {
         }
     }
 
-    private record ReplyInfo(String content, int index, int replaceCount) {}
+    private record ReplyInfo(String content, int index, int replaceCount, String domain) {}
 
     private ReplyInfo buildReplyString(String content, int index) {
         Matcher matcher = urlRegex.matcher(content);
         StringBuilder reply = new StringBuilder();
         int count = 0;
+        String domain = "";
         while (matcher.find()) {
             count++;
-            String domain = matcher.group("domain");
+            domain = matcher.group("domain");
             List<String> replacements = domains.get(domain);
-            if (index < replacements.size()) {
+            if (replacements != null) {
+                index = index % replacements.size();
                 if (useWebhooks) {
                     reply.append(matcher.group("before"))
-                            .append("<").append(matcher.group("fullLink")).append("> [.](")
+                            .append("<").append(matcher.group("fullLink")).append("> [_](")
                             .append(matcher.group("fullLink").replace(domain, replacements.get(index) == null ? replacements.getLast() : replacements.get(index)))
                             .append(")").append(matcher.group("after"));
                 } else {
-                    reply.append("[.](")
+                    reply.append("[_](")
                             .append(matcher.group("fullLink").replace(domain, replacements.get(index) == null ? replacements.getLast() : replacements.get(index)))
                             .append(")");
                     // Spoiler Check, odd number of markers before & after link required
@@ -129,16 +132,19 @@ public class MessageListener extends ListenerAdapter {
                     reply.insert(0,"\uD83D\uDD17");
                 }
             } else {
-                reply.append("index '").append(index).append("' out of bounds in alt list for domain  '").append(domain).append("'");
+                return null;
             }
         }
-        return new ReplyInfo(reply.toString(), index, count);
+        return new ReplyInfo(reply.toString(), index, count, domain);
     }
 
 
     private void recurseCheckEmbed(final Message msg, final MessageReceivedEvent event, final String content, int index, int replaceCount) {
+        //> max retries
         if (index > 10) {
             LatiBot.LOG.info("Embed failed with message: '{}', too many retries!", msg.getContentRaw());
+            msg.delete().queue();
+            event.getMessage().suppressEmbeds(false).queue();
             return;
         }
         event.getJDA().getRateLimitPool().schedule(() -> {
@@ -147,6 +153,7 @@ public class MessageListener extends ListenerAdapter {
             if ((c = (m = event.getChannel().retrieveMessageById(msg.getIdLong()).complete()).getEmbeds().size()) < replaceCount) {
                 LatiBot.LOG.info("Embed failed with message: '{}', expected {} embeds but got {}, retrying...", m.getContentRaw(), replaceCount, c);
                 ReplyInfo r = buildReplyString(content, index + 1);
+                if (r == null) return;
                 m.editMessage(r.content).queue(t -> recurseCheckEmbed(t, event, content, index + 1, r.replaceCount));
             }
         }, 5, TimeUnit.SECONDS);
